@@ -67,13 +67,12 @@ class Review(DateInfo):
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         blank=False,
         null=False,
         verbose_name='Пользователь'
     )
 
-    # Todo удалять ли отзывы если продукт удален или Продукт не удаляется, а просто не в наличии
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
@@ -96,7 +95,8 @@ class Review(DateInfo):
 
 
 class ProductOrders(models.Model):
-    """"""
+    """ Позиции. Промежуточная таблица между товаром и заказом """
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_positions')
     quantity = models.PositiveIntegerField()
