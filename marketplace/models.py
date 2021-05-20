@@ -36,6 +36,7 @@ class Product(DateInfo):
     description = models.TextField(
         null=False,
         blank=True,
+        default='',
         verbose_name='Описание'
     )
 
@@ -50,6 +51,15 @@ class Product(DateInfo):
 
 class Review(DateInfo):
     """ Отзывы """
+
+    class ProductMarks(models.IntegerChoices):
+        """ Оценка товара """
+
+        ONE = 1
+        TWO = 2
+        THREE = 3
+        FOUR = 4
+        FIVE = 5
 
     class Meta:
         verbose_name = 'Отзыв'
@@ -75,10 +85,14 @@ class Review(DateInfo):
     text = models.TextField(
         null=False,
         blank=True,
+        default='',
         verbose_name='Текст'
     )
 
-     mark = models.TextChoices()
+    mark = models.IntegerField(
+        choices=ProductMarks.choices,
+        blank=True
+    )
 
 
 
