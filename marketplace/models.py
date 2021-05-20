@@ -52,6 +52,10 @@ class Product(DateInfo):
 class Review(DateInfo):
     """ Отзывы """
 
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+
     class ProductMarks(models.IntegerChoices):
         """ Оценка товара """
 
@@ -60,10 +64,6 @@ class Review(DateInfo):
         THREE = 3
         FOUR = 4
         FIVE = 5
-
-    class Meta:
-        verbose_name = 'Отзыв'
-        verbose_name_plural = 'Отзывы'
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -92,6 +92,80 @@ class Review(DateInfo):
     mark = models.IntegerField(
         choices=ProductMarks.choices,
         blank=True
+    )
+
+
+class ProductOrders(models.Model):
+    """"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_positions')
+    quantity = models.PositiveIntegerField()
+
+
+class Order(DateInfo):
+    """ Заказы """
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
+
+    class OrderStatus(models.TextChoices):
+        """ Статус заказа """
+
+        NEW = 'NEW', 'Новый'
+        IN_PROGRESS = 'IN_PROGRESS', 'В процессе'
+        DONE = 'DONE', 'Выполнен'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        blank=False,
+        null=False,
+        verbose_name='Пользователь'
+    )
+
+    products = models.ManyToManyField(
+        Product, through=ProductOrders,
+        verbose_name='Позиции'
+    )
+
+    amount = models.DecimalField(
+        null=False,
+        blank=False,
+        max_digits=8,
+        decimal_places=2,
+        verbose_name='Сумма'
+    )
+
+    status = models.TextField(
+        choices=OrderStatus.choices,
+        verbose_name='Статус',
+        default=OrderStatus.NEW
+    )
+
+
+class Collection(DateInfo):
+    """ Коллекция товаров """
+
+    class Meta:
+        verbose_name = 'Коллекция'
+        verbose_name_plural = 'Коллекции'
+
+    title = models.CharField(
+        null=False,
+        blank=False,
+        max_length=255
+    )
+
+    text = models.TextField(
+        null=False,
+        blank=True,
+        default=''
+    )
+
+    products = models.ManyToManyField(
+        Product,
+        related_name='collections'
     )
 
 
