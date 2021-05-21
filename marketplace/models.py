@@ -1,6 +1,5 @@
+from django.conf import settings
 from django.db import models
-
-from website import settings
 
 
 class DateInfo(models.Model):
