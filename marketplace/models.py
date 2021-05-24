@@ -47,6 +47,9 @@ class Product(DateInfo):
         verbose_name='Цена'
     )
 
+    def __str__(self):
+        return self.title
+
 
 class Review(DateInfo):
     """ Отзывы """
@@ -93,7 +96,7 @@ class Review(DateInfo):
     )
 
 
-class ProductOrders(models.Model):
+class ProductOrder(models.Model):
     """ Позиции. Промежуточная таблица между товаром и заказом """
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -124,7 +127,7 @@ class Order(DateInfo):
     )
 
     products = models.ManyToManyField(
-        Product, through=ProductOrders,
+        Product, through=ProductOrder,
         verbose_name='Позиции'
     )
 
@@ -166,6 +169,9 @@ class Collection(DateInfo):
         Product,
         related_name='collections'
     )
+
+    def __str__(self):
+        return self.title
 
 
 
