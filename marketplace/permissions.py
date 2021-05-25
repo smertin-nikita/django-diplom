@@ -4,7 +4,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 class IsOwnerOrReadOnly(BasePermission):
     """
     Object-level permission to only allow owners of an object to edit it.
-    Assumes the model instance has an `user` attribute.
+    Assumes the model instance has an `creator` attribute.
     """
 
     def has_object_permission(self, request, view, obj):
@@ -13,8 +13,9 @@ class IsOwnerOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        # Instance must have an attribute named `user`.
-        return obj.user == request.user
+        # todo определится с название поля
+        # Instance must have an attribute named `creator`.
+        return obj.creator == request.user
 
 
 class IsOwnerUser(BasePermission):
@@ -24,7 +25,7 @@ class IsOwnerUser(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Instance must have an attribute named `user`.
-        return obj.user == request.user
+        return obj.creator == request.user
 
 
 class OnlyEditToOrderStatus(BasePermission):
