@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.models import Product, Review, Order, Collection
@@ -9,7 +9,7 @@ class ProductViewSet(ModelViewSet):
     """ Viewset для товаров. """
 
     queryset = Product.objects.all()
-    permission_classes = [IsAuthenticated | IsStaffOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly | IsAdminUser]
     # serializer_class = ProductSerializer
     # filterset_class = ProductFilter
 
