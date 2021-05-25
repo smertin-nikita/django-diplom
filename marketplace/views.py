@@ -46,11 +46,12 @@ class OrderViewSet(ModelViewSet):
 class CollectionViewSet(ModelViewSet):
     """ Viewset для подборок. """
     queryset = Collection.objects.all()
+    permission_classes = [IsAuthenticatedOrReadOnly | IsAdminUser]
     # serializer_class = CollectionSerializer
     # filterset_class = CollectionFilter
 
-    def get_permissions(self):
-        """Получение прав для действий."""
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [IsAuthenticated(), IsOwnerOrReadOnly()]
-        return []
+    # def get_permissions(self):
+    #     """Получение прав для действий."""
+    #     if self.action in ["create", "update", "partial_update", "destroy"]:
+    #         return [IsAuthenticated(), IsOwnerOrReadOnly()]
+    #     return []
