@@ -57,6 +57,7 @@ class Review(DateInfo):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        unique_together = ('creator', 'product',)
 
     class ProductMarks(models.IntegerChoices):
         """ Оценка товара """
@@ -67,7 +68,7 @@ class Review(DateInfo):
         FOUR = 4
         FIVE = 5
 
-    user = models.ForeignKey(
+    creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.DO_NOTHING,
         blank=False,
@@ -105,7 +106,7 @@ class ProductOrder(models.Model):
 
 
 class Order(DateInfo):
-    """ Заказы """
+    """ Заказы. """
 
     class Meta:
         verbose_name = 'Заказ'
