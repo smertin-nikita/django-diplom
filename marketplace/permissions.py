@@ -35,5 +35,5 @@ class OnlyEditToOrderStatus(BasePermission):
     def has_object_permission(self, request, view, obj):
         # Todo Посмотреть откуда брать статус в
         # Instance must have an attribute named `status`.
-        return obj.method == 'PATCH' and request.
+        return obj.method == 'PATCH' and request.status
 

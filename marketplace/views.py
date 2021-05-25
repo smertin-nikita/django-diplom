@@ -1,8 +1,8 @@
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, AND
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.models import Product, Review, Order, Collection
-from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser
+from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser, OnlyEditToOrderStatus
 
 
 class ProductViewSet(ModelViewSet):
@@ -31,7 +31,7 @@ class ReviewViewSet(ModelViewSet):
 
 class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
-    queryset = Review.objects.all()
+    queryset = Order.objects.all()
     permission_classes = [IsAuthenticated & IsOwnerUser]
     # serializer_class = OrderSerializer
     # filterset_class = OrderFilter
@@ -39,7 +39,7 @@ class OrderViewSet(ModelViewSet):
     def get_permissions(self):
         """Получение прав для действий."""
         if self.action in ["partial_update"]:
-            return [, IsOwnerOrReadOnly()]
+            return [AND(OnlyEditToOrderStatus(), IsAdminUser())]
         return []
 
 
