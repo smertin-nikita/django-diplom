@@ -2,7 +2,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.models import Product, Review, Order, Collection
-from marketplace.permissions import IsStaffOrReadOnly
+from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser
 
 
 class ProductViewSet(ModelViewSet):
@@ -24,39 +24,22 @@ class ReviewViewSet(ModelViewSet):
     """ Viewset для отзывов. """
 
     queryset = Review.objects.all()
+    permission_classes = [IsAuthenticatedOrReadOnly | IsOwnerOrReadOnly]
     # serializer_class = ReviewSerializer
     # filterset_class = ReviewFilter
-
-    def get_permissions(self):
-        """Получение прав для действий."""
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [IsAuthenticated(), IsOwnerOrReadOnly()]
-        return []
 
 
 class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
     queryset = Review.objects.all()
+    permission_classes = [IsAuthenticated & IsOwnerUser]
     # serializer_class = OrderSerializer
     # filterset_class = OrderFilter
 
     def get_permissions(self):
         """Получение прав для действий."""
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [IsAuthenticated(), IsOwnerOrReadOnly()]
-        return []
-
-
-class OrderViewSet(ModelViewSet):
-    """ Viewset для заказов. """
-    queryset = Order.objects.all()
-    # serializer_class = OrderSerializer
-    # filterset_class = OrderFilter
-
-    def get_permissions(self):
-        """Получение прав для действий."""
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [IsAuthenticated(), IsOwnerOrReadOnly()]
+        if self.action in ["partial_update"]:
+            return [, IsOwnerOrReadOnly()]
         return []
 
 
