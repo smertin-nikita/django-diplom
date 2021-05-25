@@ -13,12 +13,6 @@ class ProductViewSet(ModelViewSet):
     # serializer_class = ProductSerializer
     # filterset_class = ProductFilter
 
-    # def get_permissions(self):
-    #     """Получение прав для действий."""
-    #     if self.action in ["create", "update", "partial_update", "destroy"]:
-    #         return [IsAuthenticated(), IsStaffOrReadOnly()]
-    #     return []
-
 
 class ReviewViewSet(ModelViewSet):
     """ Viewset для отзывов. """
@@ -49,9 +43,3 @@ class CollectionViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly | IsAdminUser]
     # serializer_class = CollectionSerializer
     # filterset_class = CollectionFilter
-
-    # def get_permissions(self):
-    #     """Получение прав для действий."""
-    #     if self.action in ["create", "update", "partial_update", "destroy"]:
-    #         return [IsAuthenticated(), IsOwnerOrReadOnly()]
-    #     return []
