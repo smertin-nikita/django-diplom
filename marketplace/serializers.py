@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
 
-from marketplace.models import Product, Review
+from marketplace.models import Product, Review, Order
 
 
 class UserSerializer(ModelSerializer):
@@ -17,9 +17,9 @@ class UserSerializer(ModelSerializer):
 class ProductSerializer(ModelSerializer):
     """Serializer для товара."""
 
-    user = UserSerializer(
-        read_only=True,
-    )
+    # creator = UserSerializer(
+    #     read_only=True,
+    # )
 
     class Meta:
         model = Product
@@ -29,13 +29,13 @@ class ProductSerializer(ModelSerializer):
 class ReviewSerializer(ModelSerializer):
     """Serializer для отзыва."""
 
-    user = UserSerializer(
+    creator = UserSerializer(
         read_only=True,
     )
 
     class Meta:
         model = Review
-        fields = ('id', 'author', 'product', 'text', 'mark', 'created_at', )
+        fields = ('id', 'creator', 'product', 'text', 'mark', 'created_at', )
 
     def create(self, validated_data):
         """Метод для создания"""
@@ -49,8 +49,27 @@ class ReviewSerializer(ModelSerializer):
         creator = self.context['request'].user
         product = data['product']
 
-        if Review.objects.filter(creator=creator, product=product).exist():
+        if Review.objects.filter(creator=creator.id, product=product.id).exists():
             raise ValidationError("Вы не можете оставлять более одного отзыва.")
 
         return data
+
+
+class OrderSerializer(ModelSerializer):
+    """Serializer для заказа."""
+
+    creator = UserSerializer(
+        read_only=True,
+    )
+
+    class Meta:
+        model = Order
+        fields = ('id', 'status', 'creator', 'amount', 'created_at', )
+
+    def create(self, validated_data):
+        """Метод для создания"""
+
+        validated_data["creator"] = self.context["request"].user
+
+        return super().create(validated_data)
 
