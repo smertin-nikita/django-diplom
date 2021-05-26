@@ -91,9 +91,11 @@ class Review(DateInfo):
         verbose_name='Текст'
     )
 
+    # todo Определить дефолтный отзыв
     mark = models.IntegerField(
         choices=ProductMarks.choices,
-        blank=True
+        null=False,
+        blank=False
     )
 
 
