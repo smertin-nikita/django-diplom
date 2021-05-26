@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
 
 from marketplace.models import Product, Review
@@ -39,17 +40,17 @@ class ReviewSerializer(ModelSerializer):
     def create(self, validated_data):
         """Метод для создания"""
 
-        validated_data[" "] = self.context["request"].user
+        validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
 
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
+        # todo ПРоверить что приходит
+        creator = self.context['request'].user
+        product = data['product']
 
-        if data.get('status', AdvertisementStatusChoices.OPEN) == AdvertisementStatusChoices.OPEN:
-            creator = self.context['request'].user
-            advertisements = creator.advertisements.filter(status=AdvertisementStatusChoices.OPEN)
-            if advertisements.count() >= 10:
-                raise serializers.ValidationError("Должно быть не больше 10 открытых объявлений.")
+        if Review.objects.filter(creator=creator, product=product).exist():
+            raise ValidationError("Вы не можете оставлять более одного отзыва.")
 
         return data
 
