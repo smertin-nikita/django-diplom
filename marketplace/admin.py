@@ -2,9 +2,13 @@ from django.contrib import admin
 
 from marketplace.models import Product, Collection, Order, Review, ProductOrder
 
-admin.site.register(Product)
 admin.site.register(Collection)
 admin.site.register(Review)
+
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    search_fields = ['title', 'description']
 
 
 class ProductOrderInline(admin.TabularInline):
