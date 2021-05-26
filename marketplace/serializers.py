@@ -17,10 +17,6 @@ class UserSerializer(ModelSerializer):
 class ProductSerializer(ModelSerializer):
     """Serializer для товара."""
 
-    # creator = UserSerializer(
-    #     read_only=True,
-    # )
-
     class Meta:
         model = Product
         fields = ('id', 'title', 'description', 'price', 'created_at', )
@@ -45,7 +41,7 @@ class ReviewSerializer(ModelSerializer):
 
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
-        # todo ПРоверить что приходит
+
         creator = self.context['request'].user
         product = data['product']
 
@@ -68,8 +64,17 @@ class OrderSerializer(ModelSerializer):
 
     def create(self, validated_data):
         """Метод для создания"""
-
+        # todo Как и где считать сумму заказа
         validated_data["creator"] = self.context["request"].user
 
         return super().create(validated_data)
+
+
+class CollectionSerializer(ModelSerializer):
+    """Serializer для подборки товаров."""
+
+    class Meta:
+        model = Order
+        fields = ('id', 'title', 'text', 'created_at', )
+
 
