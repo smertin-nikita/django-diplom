@@ -119,7 +119,7 @@ class Order(DateInfo):
         IN_PROGRESS = 'IN_PROGRESS', 'В процессе'
         DONE = 'DONE', 'Выполнен'
 
-    user = models.ForeignKey(
+    creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         blank=False,
