@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters, DateFromToRangeFilter
 
-from marketplace.models import Product
+from marketplace.models import Product, Review
 
 
 class ProductFilter(filters.FilterSet):
@@ -11,3 +11,13 @@ class ProductFilter(filters.FilterSet):
         fields = {
             'price': ['lte', 'gte'],
         }
+
+
+class ReviewFilter(filters.FilterSet):
+    """Фильтры для товаров."""
+
+    created_at = DateFromToRangeFilter()
+
+    class Meta:
+        model = Review
+        fields = ['creator__id', 'product__id', 'created_at']

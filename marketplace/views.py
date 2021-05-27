@@ -3,7 +3,7 @@ from rest_framework import filters
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, AND
 from rest_framework.viewsets import ModelViewSet
 
-from marketplace.filters import ProductFilter
+from marketplace.filters import ProductFilter, ReviewFilter
 from marketplace.models import Product, Review, Order, Collection
 from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser, OnlyEditToOrderStatus
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
@@ -26,9 +26,9 @@ class ReviewViewSet(ModelViewSet):
     """ Viewset для отзывов. """
 
     queryset = Review.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly | IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly & IsOwnerOrReadOnly]
     serializer_class = ReviewSerializer
-    # filterset_class = ReviewFilter
+    filterset_class = ReviewFilter
 
 
 class OrderViewSet(ModelViewSet):

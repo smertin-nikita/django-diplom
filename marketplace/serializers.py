@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
-from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 from marketplace.models import Product, Review, Order
 
 
-class UserSerializer(ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """Serializer для пользователя."""
 
     class Meta:
@@ -14,7 +13,7 @@ class UserSerializer(ModelSerializer):
                   'last_name',)
 
 
-class ProductSerializer(ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     """Serializer для товара."""
 
     class Meta:
@@ -22,16 +21,27 @@ class ProductSerializer(ModelSerializer):
         fields = ('id', 'title', 'description', 'price', 'created_at', )
 
 
-class ReviewSerializer(ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     """Serializer для отзыва."""
 
-    creator = UserSerializer(
+    # creator = UserSerializer(
+    #     read_only=True
+    # )
+
+    creator = serializers.PrimaryKeyRelatedField(
         read_only=True,
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
         model = Review
         fields = ('id', 'creator', 'product', 'text', 'mark', 'created_at', )
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=['creator', 'product']
+            )
+        ]
 
     def create(self, validated_data):
         """Метод для создания"""
@@ -39,19 +49,8 @@ class ReviewSerializer(ModelSerializer):
         validated_data["creator"] = self.context["request"].user
         return super().create(validated_data)
 
-    def validate(self, data):
-        """Метод для валидации. Вызывается при создании и обновлении."""
 
-        creator = self.context['request'].user
-        product = data['product']
-
-        if Review.objects.filter(creator=creator.id, product=product.id).exists():
-            raise ValidationError("Вы не можете оставлять более одного отзыва.")
-
-        return data
-
-
-class OrderSerializer(ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
 
     creator = UserSerializer(
@@ -70,7 +69,7 @@ class OrderSerializer(ModelSerializer):
         return super().create(validated_data)
 
 
-class CollectionSerializer(ModelSerializer):
+class CollectionSerializer(serializers.ModelSerializer):
     """Serializer для подборки товаров."""
 
     class Meta:
