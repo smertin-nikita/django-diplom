@@ -20,4 +20,4 @@ class ReviewFilter(filters.FilterSet):
 
     class Meta:
         model = Review
-        fields = ['creator__id', 'product__id', 'created_at']
+        fields = ['creator', 'product', 'created_at']
