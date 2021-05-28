@@ -24,10 +24,12 @@ class ProductSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Serializer для отзыва."""
 
+    # TODO Как лучше сереализовать создателя отзыва?
+    #  Лучше сохранять его как json c данными о пользователе
     # creator = UserSerializer(
     #     read_only=True
     # )
-
+    # TODO Или сохранять только id пользователя?
     creator = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault()
@@ -53,18 +55,26 @@ class ReviewSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
 
-    creator = UserSerializer(
+    # creator = UserSerializer(
+    #     read_only=True,
+    # )
+
+    creator = serializers.PrimaryKeyRelatedField(
         read_only=True,
+        default=serializers.CurrentUserDefault()
     )
+
+    products = ProductSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = ('id', 'status', 'creator', 'amount', 'created_at', )
+        fields = ('id', 'status', 'creator', 'amount', 'created_at', 'products', )
 
     def create(self, validated_data):
         """Метод для создания"""
-        # todo Как и где считать сумму заказа
+
         validated_data["creator"] = self.context["request"].user
+        # todo Как и где считать сумму заказа
 
         return super().create(validated_data)
 
