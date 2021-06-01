@@ -56,7 +56,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOrder
-        fields = ('product', 'order', 'quantity',)
+        fields = ('product', 'quantity',)
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -71,33 +71,26 @@ class OrderSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
+    # TODO Аналогично как с полем creator
+    #  сделать вложенность или работать только с id
     products = ProductSerializer(many=True, read_only=True)
-    products_ids = serializers.PrimaryKeyRelatedField(
-        many=True, write_only=True, queryset=Product.objects.all()
-    )
+    order_positions = ProductOrderSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ('id', 'products', 'products_ids', 'status', 'creator', 'created_at',)
+        fields = ['id', 'products', 'order_positions', 'status', 'creator', 'created_at',]
 
     def create(self, validated_data):
         """Метод для создания"""
 
-        validated_data["creator"] = self.context["request"].user
+        creator = self.context["request"].user
 
-        products_data = validated_data.pop('products')
-        order = Order.objects.create(**validated_data)
-        for product_data in products_data:
-            ProductOrder.objects.create(order=order, **product_data)
+        order_positions = validated_data.pop('order_positions')
+        amount = sum(order_data['product'].price * order_data['quantity'] for order_data in order_positions)
+        order = Order.objects.create(creator=creator, amount=amount)
+        for order_data in order_positions:
+            ProductOrder.objects.create(order=order, **order_data)
         return order
-
-    def validate_products(self, data):
-        """Валидация суммы заказа"""
-
-        if 'products' not in data.keys():
-            raise serializers.ValidationError('Нет товаров в заказе.')
-
-        return data
 
 
 class CollectionSerializer(serializers.ModelSerializer):
