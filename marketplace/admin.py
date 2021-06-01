@@ -18,5 +18,5 @@ class ProductOrderInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     ordering = ['created_at']
-    readonly_fields = ('amount',)
+    # readonly_fields = ('amount',)
     inlines = [ProductOrderInline]

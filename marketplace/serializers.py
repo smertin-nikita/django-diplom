@@ -68,15 +68,26 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'status', 'creator', 'amount', 'created_at', 'products', )
+        fields = ('id', 'products', 'amount', 'status', 'creator', 'created_at',)
 
     def create(self, validated_data):
         """Метод для создания"""
 
         validated_data["creator"] = self.context["request"].user
-        # todo Как и где считать сумму заказа
 
-        return super().create(validated_data)
+        products_data = validated_data.pop('products')
+        order = Order.objects.create(**validated_data)
+        for product_data in products_data:
+            Product.objects.create(order=order, **product_data)
+        return order
+
+    def validate(self, data):
+        """Валидация суммы заказа"""
+
+        if 'products' not in data.keys():
+            raise serializers.ValidationError('Нет товаров в заказе.')
+
+        return data
 
 
 class CollectionSerializer(serializers.ModelSerializer):
