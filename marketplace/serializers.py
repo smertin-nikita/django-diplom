@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from marketplace.models import Product, Review, Order
+from marketplace.models import Product, Review, Order, ProductOrder
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -52,6 +52,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class ProductOrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductOrder
+        fields = ('product', 'order', 'quantity',)
+
+
 class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
 
@@ -65,10 +72,13 @@ class OrderSerializer(serializers.ModelSerializer):
     )
 
     products = ProductSerializer(many=True, read_only=True)
+    products_ids = serializers.PrimaryKeyRelatedField(
+        many=True, write_only=True, queryset=Product.objects.all()
+    )
 
     class Meta:
         model = Order
-        fields = ('id', 'products', 'amount', 'status', 'creator', 'created_at',)
+        fields = ('id', 'products', 'products_ids', 'status', 'creator', 'created_at',)
 
     def create(self, validated_data):
         """Метод для создания"""
@@ -78,10 +88,10 @@ class OrderSerializer(serializers.ModelSerializer):
         products_data = validated_data.pop('products')
         order = Order.objects.create(**validated_data)
         for product_data in products_data:
-            Product.objects.create(order=order, **product_data)
+            ProductOrder.objects.create(order=order, **product_data)
         return order
 
-    def validate(self, data):
+    def validate_products(self, data):
         """Валидация суммы заказа"""
 
         if 'products' not in data.keys():
