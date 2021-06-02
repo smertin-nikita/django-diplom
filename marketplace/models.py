@@ -14,7 +14,7 @@ class DateInfo(models.Model):
     )
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name='Дана обновления'
+        verbose_name='Дата обновления'
     )
 
 
