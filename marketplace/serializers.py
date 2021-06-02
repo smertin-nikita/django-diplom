@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from marketplace.models import Product, Review, Order, ProductOrder
 
@@ -52,14 +53,25 @@ class ReviewSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class ProductOrderSerializer(serializers.ModelSerializer):
+class ProductOrderSerializer(WritableNestedModelSerializer):
+
+    product = ProductSerializer(read_only=True)
 
     class Meta:
         model = ProductOrder
         fields = ('product', 'quantity',)
 
+    def to_internal_value(self, data):
 
-class OrderSerializer(serializers.ModelSerializer):
+        if not data.get('product'):
+            raise serializers.ValidationError('Product id required field.')
+
+        ret = super().to_internal_value(data)
+        ret['product'] = Product.objects.get(id=data['product'])
+        return ret
+
+
+class OrderSerializer(WritableNestedModelSerializer):
     """Serializer для заказа."""
 
     # creator = UserSerializer(
@@ -73,12 +85,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
     # TODO Аналогично как с полем creator
     #  сделать вложенность или работать только с id
-    products = ProductSerializer(many=True, read_only=True)
+
     order_positions = ProductOrderSerializer(many=True)
+    #order_positions = ProductListingField(many=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'products', 'order_positions', 'status', 'creator', 'created_at',]
+        fields = ('id', 'amount', 'order_positions', 'status', 'creator', 'created_at',)
+        extra_kwargs = {'amount': {'required': False}}
 
     def create(self, validated_data):
         """Метод для создания"""
