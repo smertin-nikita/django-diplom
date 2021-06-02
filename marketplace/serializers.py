@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from drf_writable_nested.serializers import WritableNestedModelSerializer
+# from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from marketplace.models import Product, Review, Order, ProductOrder
 
@@ -53,7 +53,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class ProductOrderSerializer(WritableNestedModelSerializer):
+class ProductOrderSerializer(serializers.ModelSerializer):
 
     product = ProductSerializer(read_only=True)
 
@@ -66,12 +66,13 @@ class ProductOrderSerializer(WritableNestedModelSerializer):
         if not data.get('product'):
             raise serializers.ValidationError('Product id required field.')
 
+        # todo Считаю неправильным использовать новый queryset
         ret = super().to_internal_value(data)
         ret['product'] = Product.objects.get(id=data['product'])
         return ret
 
 
-class OrderSerializer(WritableNestedModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
 
     # creator = UserSerializer(

@@ -28,6 +28,14 @@ class ReviewViewSet(ModelViewSet):
     queryset = Review.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly & IsOwnerOrReadOnly]
     serializer_class = ReviewSerializer
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = [
+        '=order_positions__product__id',
+        'order_positions__product__title',
+        'order_positions__product__description'
+    ]
+
     filterset_class = ReviewFilter
 
 
