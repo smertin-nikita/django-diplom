@@ -101,7 +101,7 @@ class Review(DateInfo):
 class ProductOrder(models.Model):
     """ Позиции. Промежуточная таблица между товаром и заказом """
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='positions')
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_positions')
     quantity = models.PositiveIntegerField()
 

@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters, DateFromToRangeFilter
+from rest_framework.filters import SearchFilter
 
 from marketplace.models import Product, Review, Order
 
@@ -23,6 +24,13 @@ class ReviewFilter(filters.FilterSet):
         fields = ['creator', 'product', 'created_at']
 
 
+class OrderProductSearchFilter(SearchFilter):
+    def get_search_fields(self, view, request):
+        if request.query_params.get('product_id'):
+            return ['=order_positions__product__id']
+        return super().get_search_fields(view, request)
+
+
 class OrderFilter(filters.FilterSet):
     """Фильтры для товаров."""
 
@@ -31,5 +39,5 @@ class OrderFilter(filters.FilterSet):
 
     class Meta:
         model = Order
-        fields = ['status', 'created_at', 'updated_at', 'order_positions__product']
+        fields = ['status', 'created_at', 'updated_at']
         # fields = {'amount': ['lte', 'gte']}
