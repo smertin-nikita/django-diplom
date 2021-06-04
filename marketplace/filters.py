@@ -39,5 +39,4 @@ class OrderFilter(filters.FilterSet):
 
     class Meta:
         model = Order
-        fields = ['status', 'created_at', 'updated_at']
-        # fields = {'amount': ['lte', 'gte']}
+        fields = ['status', 'created_at', 'updated_at', 'amount']

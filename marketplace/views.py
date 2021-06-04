@@ -3,7 +3,7 @@ from rest_framework import filters
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, AND
 from rest_framework.viewsets import ModelViewSet
 
-from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter, OrderProductSearchFilter
+from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter
 from marketplace.models import Product, Review, Order, Collection
 from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser, OnlyEditToOrderStatus
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
@@ -29,8 +29,6 @@ class ReviewViewSet(ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly & IsOwnerOrReadOnly]
     serializer_class = ReviewSerializer
 
-
-
     filterset_class = ReviewFilter
 
 
@@ -41,24 +39,22 @@ class OrderViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated & IsOwnerUser]
     serializer_class = OrderSerializer
 
-    filter_backends = [DjangoFilterBackend, OrderProductSearchFilter]
-    search_fields = [
-        '=order_positions__product__id'
-    ]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    ordering_fields = ['amount', ]
 
     filterset_class = OrderFilter
 
     def get_queryset(self):
-        """queryset с заказами только для создателя или для админа"""
+        """queryset с заказами только для создателя или для админа c фильтрацией по продукту из позиции"""
 
         filter_params = {}
 
+        # фильтрация для продукта из позиции
         product_id = self.request.query_params.get('product_id')
         if product_id is not None:
             filter_params = {'order_positions__product__id': product_id}
 
         user = self.request.user
-
         if user.is_staff:
             return super().get_queryset().filter(**filter_params)
 
