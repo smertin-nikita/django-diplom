@@ -1,11 +1,11 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, AND, OR, NOT
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter
 from marketplace.models import Product, Review, Order, Collection
-from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser, OnlyEditToOrderStatus
+from marketplace.permissions import IsOwnerOrReadOnly, IsOwnerUser, OnlyAdminEditToOrderStatus
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
 
 
@@ -63,7 +63,7 @@ class OrderViewSet(ModelViewSet):
     def get_permissions(self):
         """Получение прав для действий."""
         if self.action in ["partial_update"]:
-            return [AND(OnlyEditToOrderStatus(), IsAdminUser())]
+            return [OnlyAdminEditToOrderStatus()]
 
         return []
 
@@ -74,4 +74,3 @@ class CollectionViewSet(ModelViewSet):
     queryset = Collection.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly | IsAdminUser]
     serializer_class = CollectionSerializer
-    # filterset_class = CollectionFilter

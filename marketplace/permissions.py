@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import BasePermission, SAFE_METHODS, IsAdminUser
 
 
 class IsOwnerOrReadOnly(BasePermission):
@@ -27,7 +27,7 @@ class IsOwnerUser(BasePermission):
         return obj.creator == request.user
 
 
-class OnlyEditToOrderStatus(BasePermission):
+class OnlyAdminEditToOrderStatus(BasePermission):
     """
     Object-level permission to allows only admins to edit status of order.
     """
@@ -35,5 +35,7 @@ class OnlyEditToOrderStatus(BasePermission):
     def has_object_permission(self, request, view, obj):
         # Todo Посмотреть откуда брать статус в
         # Instance must have an attribute named `status`.
-        return bool(request.data.get('status'))
+        if bool(request.data.get('status')):
+            return IsAdminUser.has_permission(self, request, view)
+        return True
 
