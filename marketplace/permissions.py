@@ -13,7 +13,6 @@ class IsOwnerOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        # todo определится с название поля
         # Instance must have an attribute named `creator`.
         return obj.creator == request.user
 
@@ -36,5 +35,5 @@ class OnlyEditToOrderStatus(BasePermission):
     def has_object_permission(self, request, view, obj):
         # Todo Посмотреть откуда брать статус в
         # Instance must have an attribute named `status`.
-        return obj.method == 'PATCH' and request.status
+        return bool(request.data.get('status'))
 
