@@ -66,6 +66,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
         if not data.get('product'):
             raise serializers.ValidationError('Product id required field.')
 
+        # todo на каждый id продукта запрос, что не есть хорошо если продуктов много
         # todo Считаю неправильным использовать новый queryset
         ret = super().to_internal_value(data)
         ret['product'] = Product.objects.get(id=data['product'])
@@ -84,11 +85,7 @@ class OrderSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    # TODO Аналогично как с полем creator
-    #  сделать вложенность или работать только с id
-
     order_positions = ProductOrderSerializer(many=True)
-    #order_positions = ProductListingField(many=True)
 
     class Meta:
         model = Order
