@@ -42,7 +42,7 @@ class Product(DateInfo):
     price = models.DecimalField(
         null=False,
         blank=False,
-        max_digits=8,
+        max_digits=12,
         decimal_places=2,
         verbose_name='Цена'
     )
