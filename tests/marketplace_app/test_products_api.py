@@ -2,8 +2,11 @@ import decimal
 import random
 
 import pytest
+from pytest_django.fixtures import admin_user, django_user_model, client
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+
+from website import settings
 
 
 @pytest.mark.django_db
@@ -104,3 +107,38 @@ def test_filter_search_products(api_client, product_factory):
     assert test_product['title'] == product.title
 
     #Todo придумать тест для фильтр поиска по описанию
+
+
+@pytest.mark.parametrize(
+    ["price", "expected_status"],
+    (
+        ( "400", HTTP_201_CREATED),
+        ("-100", HTTP_400_BAD_REQUEST),
+        ("100000000", HTTP_400_BAD_REQUEST),
+    )
+)
+@pytest.mark.django_db
+def test_create_product(admin_client, django_user_model, admin_user, price, expected_status):
+
+    user = django_user_model.objects.create_user(username='username', password='password')
+
+    admin_client.force_login(admin_user)
+
+    # arrange
+    payload = {
+        'title': 'test',
+        'price': price
+    }
+    url = reverse("products-list")
+
+    # act
+    resp = admin_client.post(url, payload)
+
+    # assert
+
+    assert resp.status_code == expected_status
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 5  # fields count
+    assert resp_json['title'] == payload['title']
+    assert resp_json['price'] == payload['price']
