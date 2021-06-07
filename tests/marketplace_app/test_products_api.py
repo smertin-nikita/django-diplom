@@ -81,3 +81,26 @@ def test_filter_price_products(api_client, product_factory):
     assert resp_json
     for item in resp_json:
         assert decimal.Decimal(item['price']) <= test_price
+
+
+@pytest.mark.django_db
+def test_filter_search_products(api_client, product_factory):
+    # arrange
+    product = product_factory()
+    product_factory()
+
+    url = reverse("products-list")
+
+    # act test title
+    resp = api_client.get(url, {'search': product.title})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 1
+    test_product = resp_json[0]
+    assert test_product['id'] == product.id
+    assert test_product['title'] == product.title
+
+    #Todo придумать тест для фильтр поиска по описанию
