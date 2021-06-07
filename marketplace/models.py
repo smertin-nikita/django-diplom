@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.postgres import validators
 from django.db import models
 
 
@@ -44,7 +45,8 @@ class Product(DateInfo):
         blank=False,
         max_digits=12,
         decimal_places=2,
-        verbose_name='Цена'
+        verbose_name='Цена',
+        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(100000),]
     )
 
     def __str__(self):
