@@ -47,11 +47,8 @@ def test_list_products(api_client, product_factory):
     assert len(resp_json) == len(products)
     for i, item in enumerate(resp_json):
         assert item['id'] == products[i].id
-        assert 'title' in item
         assert item['title'] == products[i].title
-        assert 'description' in item
         assert item['description'] == products[i].description
-        assert 'price' in item
         assert decimal.Decimal(item['price']) == products[i].price
 
 
