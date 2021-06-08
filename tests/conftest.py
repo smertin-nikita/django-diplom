@@ -52,3 +52,12 @@ def user_factory():
         return baker.make(get_user_model(), **kwargs)
 
     return func
+
+
+@pytest.fixture
+def review_factory():
+    """ Фабрика для отзывов. """
+    def func(**kwargs):
+        return baker.make('review', **kwargs)
+
+    return func
