@@ -173,5 +173,7 @@ def test_update_product(api_client, product_factory, user_factory):
     assert resp_json
     assert len(resp_json) == 6  # fields count
     assert resp_json['id'] == product.id
-    assert 'updated_at' in resp_json
+    assert resp_json['title'] == payload['title']
+    assert decimal.Decimal(resp_json['price']) == decimal.Decimal(payload['price'])
+    assert resp_json['description'] == payload['description']
 
