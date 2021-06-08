@@ -202,7 +202,7 @@ def test_create_product(api_auth_admin, price, expected_status):
 
 
 @pytest.mark.django_db
-def test_update_product(api_auth_admin, product_factory, user_factory):
+def test_update_product(api_auth_admin, product_factory):
     # arrange
 
     product = product_factory()
