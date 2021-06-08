@@ -19,7 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'price', 'created_at', )
+        fields = ('id', 'title', 'description', 'price', 'created_at', 'updated_at',)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -38,7 +38,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'creator', 'product', 'text', 'mark', 'created_at', )
+        fields = ('id', 'creator', 'product', 'text', 'mark', 'created_at', 'updated_at', )
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=Review.objects.all(),
@@ -89,7 +89,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'amount', 'order_positions', 'status', 'creator', 'created_at',)
+        fields = ('id', 'amount', 'order_positions', 'status', 'creator', 'created_at', 'updated_at', )
         extra_kwargs = {'amount': {'required': False}}
 
     def create(self, validated_data):
@@ -110,6 +110,6 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'title', 'text', 'created_at', )
+        fields = ('id', 'title', 'text', 'created_at', 'updated_at', )
 
 
