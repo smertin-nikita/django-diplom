@@ -2,13 +2,9 @@ import decimal
 import random
 
 import pytest
-from pytest_django.fixtures import admin_user, django_user_model, client
-from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, \
-    HTTP_403_FORBIDDEN
-
-from website import settings
+    HTTP_403_FORBIDDEN, HTTP_204_NO_CONTENT
 
 
 @pytest.mark.django_db
@@ -91,8 +87,8 @@ def test_filter_price_products(api_client, product_factory):
 @pytest.mark.django_db
 def test_filter_search_products(api_client, product_factory):
     # arrange
-    product = product_factory()
-    product_factory()
+    product = product_factory(description='1')
+    product_factory(description='2')
 
     url = reverse("products-list")
 
@@ -108,26 +104,88 @@ def test_filter_search_products(api_client, product_factory):
     assert test_product['id'] == product.id
     assert test_product['title'] == product.title
 
-    #Todo придумать тест для фильтр поиска по описанию
+    # act test description
+    resp = api_client.get(url, {'search': product.description})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 1
+    test_product = resp_json[0]
+    assert test_product['id'] == product.id
+    assert test_product['description'] == product.description
+
+
+@pytest.mark.django_db
+def test_user_permissions_for_product(api_client, api_auth_client, api_auth_admin, product_factory):
+
+    payload = {
+        'title': 'test',
+        'price': '500'
+    }
+    # non auth user create
+    url = reverse("products-list")
+    resp = api_client.post(url, payload)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
+
+    # non auth user update
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_client.patch(url, payload)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
+
+    # non auth user delete
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_client.delete(url, payload)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
+
+    # auth user create
+    url = reverse("products-list")
+    resp = api_auth_client.post(url, payload)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+    # auth user update
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_auth_client.patch(url, payload)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+    # auth user delete
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_auth_client.delete(url, payload)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+    # admin create
+    url = reverse("products-list")
+    resp = api_auth_admin.post(url, payload)
+    assert resp.status_code == HTTP_201_CREATED
+
+    # admin update
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_auth_admin.patch(url, payload)
+    assert resp.status_code == HTTP_200_OK
+
+    # admin delete
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_auth_admin.delete(url, payload)
+    assert resp.status_code == HTTP_204_NO_CONTENT
 
 
 @pytest.mark.parametrize(
-    ['oauth', "is_staff", "price", "expected_status"],
+    ["price", "expected_status"],
     (
-        (True, True, "400", HTTP_201_CREATED),
-        (True, True, "-100", HTTP_400_BAD_REQUEST),
-        (True, True, "100000000", HTTP_400_BAD_REQUEST),
-        (True, False, "400", HTTP_403_FORBIDDEN),
-        (False, False, "400", HTTP_401_UNAUTHORIZED),
+        ("400", HTTP_201_CREATED),
+        ("-100", HTTP_400_BAD_REQUEST),
+        ("100000000", HTTP_400_BAD_REQUEST),
     )
 )
 @pytest.mark.django_db
-def test_create_product(api_client, oauth, is_staff, price, expected_status, user_factory):
-
-    if oauth:
-        user = user_factory(is_staff=is_staff)
-        token = Token.objects.create(user=user)
-        api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+def test_create_product(api_auth_admin, price, expected_status):
 
     # arrange
     payload = {
@@ -137,7 +195,7 @@ def test_create_product(api_client, oauth, is_staff, price, expected_status, use
     url = reverse("products-list")
 
     # act
-    resp = api_client.post(url, payload)
+    resp = api_auth_admin.post(url, payload)
 
     # assert
 
@@ -147,12 +205,8 @@ def test_create_product(api_client, oauth, is_staff, price, expected_status, use
 
 
 @pytest.mark.django_db
-def test_update_product(api_client, product_factory, user_factory):
+def test_update_product(api_auth_admin, product_factory, user_factory):
     # arrange
-
-    user = user_factory(is_staff=True)
-    token = Token.objects.create(user=user)
-    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     product = product_factory()
 
@@ -164,7 +218,7 @@ def test_update_product(api_client, product_factory, user_factory):
     url = reverse("products-detail", kwargs={'pk': product.id})
 
     # act
-    resp = api_client.patch(url, payload)
+    resp = api_auth_admin.patch(url, payload)
 
     # assert
 
@@ -176,4 +230,18 @@ def test_update_product(api_client, product_factory, user_factory):
     assert resp_json['title'] == payload['title']
     assert decimal.Decimal(resp_json['price']) == decimal.Decimal(payload['price'])
     assert resp_json['description'] == payload['description']
+
+
+@pytest.mark.django_db
+def test_delete_product(api_auth_admin, product_factory):
+
+    # arrange
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
+
+    # act
+    resp = api_auth_admin.delete(url)
+
+    # assert
+    assert resp.status_code == HTTP_204_NO_CONTENT
 

@@ -1,17 +1,44 @@
 import pytest
 from django.contrib.auth import get_user_model
 from model_bakery import baker
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 
+
+# @pytest.fixture(params=['non_auth', 'user', 'admin'])
+
 @pytest.fixture
 def api_client():
-    """Фикстура для клиента API"""
+    """ Фикстура для клиента API. """
     return APIClient()
 
 
 @pytest.fixture
+def api_auth_admin():
+    """ Фикстура для авторизованного как админ клиента API. """
+
+    api_client = APIClient()
+    user = baker.make(get_user_model(), is_staff=True)
+    token = Token.objects.create(user=user)
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+    return api_client
+
+
+@pytest.fixture
+def api_auth_client():
+    """ Фикстура для авторизованного клиента API. """
+
+    api_client = APIClient()
+    user = baker.make(get_user_model(), is_staff=False)
+    token = Token.objects.create(user=user)
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+    return api_client
+
+
+@pytest.fixture
 def product_factory():
+    """ Фабрика для товаров. """
     def func(**kwargs):
         return baker.make('product', **kwargs)
 
@@ -20,6 +47,7 @@ def product_factory():
 
 @pytest.fixture
 def user_factory():
+    """ Фабрика для пользователей. """
     def func(**kwargs):
         return baker.make(get_user_model(), **kwargs)
 
