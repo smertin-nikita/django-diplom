@@ -25,15 +25,11 @@ class ProductSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Serializer для отзыва."""
 
-    # TODO Как лучше сереализовать создателя отзыва?
-    #  Лучше сохранять его как json c данными о пользователе
-    # creator = UserSerializer(
-    #     read_only=True
-    # )
-    # TODO Или сохранять только id пользователя?
-    creator = serializers.PrimaryKeyRelatedField(
-        read_only=True,
-        default=serializers.CurrentUserDefault()
+    creator = UserSerializer(
+        read_only=True
+    )
+    product = ProductSerializer(
+        read_only=True
     )
 
     class Meta:
@@ -45,6 +41,14 @@ class ReviewSerializer(serializers.ModelSerializer):
                 fields=['creator', 'product']
             )
         ]
+
+    def to_internal_value(self, data):
+
+        ret = super().to_internal_value(data)
+        ret['product'] = Product.objects.get(id=data['product'])
+        ret['creator'] = self.context["request"].user
+
+        return ret
 
     def create(self, validated_data):
         """Метод для создания"""

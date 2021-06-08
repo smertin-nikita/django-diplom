@@ -25,7 +25,7 @@ class ProductViewSet(ModelViewSet):
 class ReviewViewSet(ModelViewSet):
     """ Viewset для отзывов. """
 
-    queryset = Review.objects.all()
+    queryset = Review.objects.select_related('creator', 'product')
     permission_classes = [IsAuthenticatedOrReadOnly & IsOwnerOrReadOnly]
     serializer_class = ReviewSerializer
 
@@ -35,7 +35,7 @@ class ReviewViewSet(ModelViewSet):
 class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
 
-    queryset = Order.objects.prefetch_related('order_positions').all()
+    queryset = Order.objects.all().prefetch_related('order_positions')
     permission_classes = [IsAuthenticated & IsOwnerUser]
     serializer_class = OrderSerializer
 

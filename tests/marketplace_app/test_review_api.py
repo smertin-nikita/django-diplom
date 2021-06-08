@@ -50,3 +50,21 @@ def test_list_products(api_client, review_factory):
         assert obj['mark'] == objs[i].mark
 
 
+@pytest.mark.django_db
+def test_create_products(api_client, review_factory):
+
+    # arrange
+    payload = {
+        'title': 'test',
+        'price': price
+    }
+    url = reverse("products-list")
+
+    # act
+    resp = api_auth_admin.post(url, payload)
+
+    # assert
+
+    assert resp.status_code == expected_status
+    resp_json = resp.json()
+    assert resp_json
