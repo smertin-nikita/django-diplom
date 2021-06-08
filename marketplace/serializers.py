@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
-# from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from marketplace.models import Product, Review, Order, ProductOrder
 
@@ -45,16 +45,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
 
         ret = super().to_internal_value(data)
-        ret['product'] = Product.objects.get(id=data['product'])
+
+        if not data.get('product'):
+            raise serializers.ValidationError({"product": "This field is required."})
+
+        try:
+            ret['product'] = Product.objects.get(id=data['product'])
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError({"product": 'does not exist.'})
+
         ret['creator'] = self.context["request"].user
 
         return ret
-
-    def create(self, validated_data):
-        """Метод для создания"""
-
-        validated_data["creator"] = self.context["request"].user
-        return super().create(validated_data)
 
 
 class ProductOrderSerializer(serializers.ModelSerializer):
@@ -67,13 +69,18 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
 
-        if not data.get('product'):
-            raise serializers.ValidationError('Product id required field.')
-
-        # todo на каждый id продукта запрос, что не есть хорошо если продуктов много
-        # todo Считаю неправильным использовать новый queryset
         ret = super().to_internal_value(data)
-        ret['product'] = Product.objects.get(id=data['product'])
+
+        if not data.get('product'):
+            raise serializers.ValidationError({"product": "This field is required."})
+
+        try:
+            ret['product'] = Product.objects.get(id=data['product'])
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError({"product": 'does not exist.'})
+
+        ret['creator'] = self.context["request"].user
+
         return ret
 
 
