@@ -24,39 +24,50 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Serializer для отзыва."""
-
+    partial = True
     creator = UserSerializer(
         read_only=True
     )
     product = ProductSerializer(
         read_only=True
     )
+    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all())
 
     class Meta:
         model = Review
-        fields = ('id', 'creator', 'product', 'text', 'mark', 'created_at', 'updated_at', )
+        fields = ('id', 'creator', 'product', 'product_id', 'text', 'mark', 'created_at', 'updated_at', )
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=Review.objects.all(),
-                fields=['creator', 'product']
+                fields=['creator', 'product_id']
             )
         ]
 
     def to_internal_value(self, data):
 
         ret = super().to_internal_value(data)
-
-        if not data.get('product'):
-            raise serializers.ValidationError({"product": "This field is required."})
-
-        try:
-            ret['product'] = Product.objects.get(id=data['product'])
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError({"product": 'does not exist.'})
-
         ret['creator'] = self.context["request"].user
 
         return ret
+
+    def create(self, validated_data):
+        """Метод для создания"""
+
+        product = validated_data['product_id']
+        validated_data['product_id'] = validated_data['product_id'].id
+        review = Review.objects.create(product=product, **validated_data)
+
+        return review
+
+    def update(self, instance, validated_data):
+        """Метод для обновления"""
+        if validated_data.get('product_id'):
+            if instance.creator == validated_data['creator'] and instance.product_id == validated_data['product_id'].id:
+                raise serializers.ValidationError(
+                    {"non_field_errors": ["The fields creator, product_id must make a unique set."]}
+                )
+
+        return super().update(instance, validated_data)
 
 
 class ProductOrderSerializer(serializers.ModelSerializer):
@@ -67,21 +78,22 @@ class ProductOrderSerializer(serializers.ModelSerializer):
         model = ProductOrder
         fields = ('product', 'quantity',)
 
-    def to_internal_value(self, data):
+    # def to_internal_value(self, data):
+    #
+    #     ret = super().to_internal_value(data)
+    #
+    #     if not data.get('product'):
+    #         raise serializers.ValidationError({"product": "This field is required."})
+    #
+    #     try:
+    #         ret['product'] = Product.objects.get(id=data['product'])
+    #     except ObjectDoesNotExist:
+    #         raise serializers.ValidationError({"product": 'does not exist.'})
+    #
+    #     ret['creator'] = self.context["request"].user
+    #
+    #     return ret
 
-        ret = super().to_internal_value(data)
-
-        if not data.get('product'):
-            raise serializers.ValidationError({"product": "This field is required."})
-
-        try:
-            ret['product'] = Product.objects.get(id=data['product'])
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError({"product": 'does not exist.'})
-
-        ret['creator'] = self.context["request"].user
-
-        return ret
 
 
 class OrderSerializer(serializers.ModelSerializer):

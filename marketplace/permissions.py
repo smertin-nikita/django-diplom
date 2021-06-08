@@ -51,3 +51,21 @@ class OnlyAdminEditToOrderStatus(IsAdminUser):
             return super().has_permission(request, view)
         return True
 
+
+# class IsOwnerOrIsAdminOrReadOnly(IsAdminUserOrReadOnly, IsOwnerOrReadOnly):
+#     """
+#     Object-level permission to allows only admins or owners to edit.
+#     """
+#
+#     def has_permission(self, request, view):
+#         # Read permissions are allowed to any request,
+#         # so we'll always allow GET, HEAD or OPTIONS requests.
+#         if request.method in SAFE_METHODS:
+#             return True
+#         return super().has_permission(request, view)
+#
+#     def has_object_permission(self, request, view, obj):
+#         return IsOwnerOrReadOnly.has_object_permission(self, request, view, obj) or\
+#                IsAdminUserOrReadOnly.has_permission(self, request, view)
+
+
