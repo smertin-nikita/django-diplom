@@ -3,8 +3,10 @@ import random
 
 import pytest
 from pytest_django.fixtures import admin_user, django_user_model, client
+from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, \
+    HTTP_403_FORBIDDEN
 
 from website import settings
 
@@ -24,7 +26,7 @@ def test_retrieve_product(api_client, product_factory):
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 5  # fields count
+    assert len(resp_json) == 6  # fields count
     assert resp_json['id'] == product.id
     assert resp_json['title'] == product.title
     assert resp_json['description'] == product.description
@@ -110,19 +112,22 @@ def test_filter_search_products(api_client, product_factory):
 
 
 @pytest.mark.parametrize(
-    ["price", "expected_status"],
+    ['oauth', "is_staff", "price", "expected_status"],
     (
-        ( "400", HTTP_201_CREATED),
-        ("-100", HTTP_400_BAD_REQUEST),
-        ("100000000", HTTP_400_BAD_REQUEST),
+        (True, True, "400", HTTP_201_CREATED),
+        (True, True, "-100", HTTP_400_BAD_REQUEST),
+        (True, True, "100000000", HTTP_400_BAD_REQUEST),
+        (True, False, "400", HTTP_403_FORBIDDEN),
+        (False, False, "400", HTTP_401_UNAUTHORIZED),
     )
 )
 @pytest.mark.django_db
-def test_create_product(admin_client, django_user_model, admin_user, price, expected_status):
+def test_create_product(api_client, oauth, is_staff, price, expected_status, user_factory):
 
-    user = django_user_model.objects.create_user(username='username', password='password')
-
-    admin_client.force_login(admin_user)
+    if oauth:
+        user = user_factory(is_staff=is_staff)
+        token = Token.objects.create(user=user)
+        api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     # arrange
     payload = {
@@ -132,13 +137,41 @@ def test_create_product(admin_client, django_user_model, admin_user, price, expe
     url = reverse("products-list")
 
     # act
-    resp = admin_client.post(url, payload)
+    resp = api_client.post(url, payload)
 
     # assert
 
     assert resp.status_code == expected_status
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 5  # fields count
-    assert resp_json['title'] == payload['title']
-    assert resp_json['price'] == payload['price']
+
+
+@pytest.mark.django_db
+def test_update_product(api_client, product_factory, user_factory):
+    # arrange
+
+    user = user_factory(is_staff=True)
+    token = Token.objects.create(user=user)
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+    product = product_factory()
+
+    payload = {
+        'title': 'test',
+        'price': 500,
+        'description': 'any text',
+    }
+    url = reverse("products-detail", kwargs={'pk': product.id})
+
+    # act
+    resp = api_client.patch(url, payload)
+
+    # assert
+
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 6  # fields count
+    assert resp_json['id'] == product.id
+    assert 'updated_at' in resp_json
+
