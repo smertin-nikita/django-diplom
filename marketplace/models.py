@@ -137,10 +137,11 @@ class Order(DateInfo):
 
     amount = models.DecimalField(
         null=False,
-        blank=False,
+        blank=True,
         max_digits=8,
         decimal_places=2,
-        verbose_name='Сумма'
+        verbose_name='Сумма',
+        editable=False
     )
 
     status = models.TextField(
