@@ -45,6 +45,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
 
+        # todo Только при правильно выставленных permission, так как обновлять создателя отзыва нельзя.
+        #  eсли делать в методе create не пройдет валидация на required field в UniqueTogetherValidator.
         ret = super().to_internal_value(data)
         ret['creator'] = self.context["request"].user
 
@@ -53,19 +55,28 @@ class ReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Метод для создания"""
 
+        # todo Костыль чтобы при записи требовался только product_id, а в отображении был instance product
         product = validated_data['product_id']
-        validated_data['product_id'] = validated_data['product_id'].id
+        validated_data['product_id'] = product.id
+
         review = Review.objects.create(product=product, **validated_data)
 
         return review
 
     def update(self, instance, validated_data):
         """Метод для обновления"""
+
+        # todo Если в бизнес логике можно менять продукт в отзыве.
         if validated_data.get('product_id'):
-            if instance.creator == validated_data['creator'] and instance.product_id == validated_data['product_id'].id:
+            if Review.objects.filter(creator=validated_data['creator'], product=validated_data['product_id']).exists():
                 raise serializers.ValidationError(
                     {"non_field_errors": ["The fields creator, product_id must make a unique set."]}
                 )
+            else:
+                product = validated_data['product_id']
+                validated_data['product_id'] = product.id
+                validated_data['product'] = product
+                return super().update(instance, validated_data)
 
         return super().update(instance, validated_data)
 
