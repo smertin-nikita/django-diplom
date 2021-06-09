@@ -54,6 +54,15 @@ def product_factory():
 
 
 @pytest.fixture
+def order_factory():
+    """ Фабрика для заказов. """
+    def func(**kwargs):
+        return baker.make('order', **kwargs)
+
+    return func
+
+
+@pytest.fixture
 def user_factory():
     """ Фабрика для пользователей. """
     def func(**kwargs):
