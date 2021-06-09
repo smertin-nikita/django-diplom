@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, \
-    HTTP_405_METHOD_NOT_ALLOWED, HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
+from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_201_CREATED, HTTP_400_BAD_REQUEST,\
+    HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db
@@ -9,7 +9,6 @@ def test_retrieve_review(api_client, review_factory):
 
     # arrange
     obj = review_factory()
-
     url = reverse("product-reviews-detail", kwargs={'pk': obj.id})
 
     # act
@@ -54,7 +53,76 @@ def test_list_reviews(api_client, review_factory):
 
 
 @pytest.mark.django_db
-def test_create_reviews(api_client, api_auth_client, api_auth_admin, review_factory, product_factory):
+def test_filter_creator_id_reviews(api_client, review_factory):
+
+    # arrange
+    reviews = review_factory(_quantity=10)
+
+    url = reverse("product-reviews-list")
+
+    # act
+    # Ищем по первому отзыву. Creator в каждом review уникальный
+    resp = api_client.get(url, {'creator': reviews[0].creator.id})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 1
+    assert resp_json[0]['id'] == reviews[0].id
+    assert resp_json[0]['creator']['id'] == reviews[0].creator.id
+    assert resp_json[0]['product']['id'] == reviews[0].product.id
+    assert resp_json[0]['product_id'] == reviews[0].product_id
+    assert resp_json[0]['text'] == reviews[0].text
+    assert resp_json[0]['mark'] == reviews[0].mark
+
+
+@pytest.mark.django_db
+def test_filter_product_id_reviews(api_client, review_factory):
+
+    # arrange
+    reviews = review_factory(_quantity=10)
+
+    url = reverse("product-reviews-list")
+
+    # act
+    # Ищем по первому отзыву. Product в каждом review уникальный
+    resp = api_client.get(url, {'product': reviews[0].product.id})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 1
+    assert resp_json[0]['id'] == reviews[0].id
+    assert resp_json[0]['creator']['id'] == reviews[0].creator.id
+    assert resp_json[0]['product']['id'] == reviews[0].product.id
+    assert resp_json[0]['product_id'] == reviews[0].product_id
+    assert resp_json[0]['text'] == reviews[0].text
+    assert resp_json[0]['mark'] == reviews[0].mark
+
+
+@pytest.mark.django_db
+def test_filter_create_at_reviews(api_client, review_factory):
+
+    # arrange
+    reviews = review_factory(_quantity=10)
+
+    url = reverse("product-reviews-list")
+
+    # act
+    # Делаю slice с 2 по 7 включительно и того должно быть 6 записей
+    resp = api_client.get(url, {'created_at_after': reviews[2].created_at, 'created_at_before': reviews[7].created_at})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 6
+
+
+@pytest.mark.django_db
+def test_create_reviews_with_permission(api_client, api_auth_client, api_auth_admin, review_factory, product_factory):
 
     product = product_factory()
     # arrange
@@ -64,14 +132,13 @@ def test_create_reviews(api_client, api_auth_client, api_auth_admin, review_fact
     }
     url = reverse("product-reviews-list")
 
-    # act for non auth user
+    # for non auth user
     resp = api_client.post(url, payload)
-    # assert for non auth user
     assert resp.status_code == HTTP_401_UNAUTHORIZED
 
-    # act for auth user
+    # for auth user
     resp = api_auth_client.post(url, payload)
-    # assert for auth user
+
     assert resp.status_code == HTTP_201_CREATED
     resp_json = resp.json()
     assert resp_json
@@ -80,9 +147,8 @@ def test_create_reviews(api_client, api_auth_client, api_auth_admin, review_fact
     assert resp_json['product_id'] == payload['product_id']
     assert resp_json['mark'] == payload['mark']
 
-    # act for admin
+    # for admin
     resp = api_auth_admin.post(url, payload)
-    # assert for admin
     assert resp.status_code == HTTP_201_CREATED
 
 
@@ -94,7 +160,7 @@ def test_create_reviews(api_client, api_auth_client, api_auth_admin, review_fact
     )
 )
 @pytest.mark.django_db
-def test_validate_mark(api_auth_client, review_factory, product_factory, mark, expected_status):
+def test_validate_mark_on_create_review(api_auth_client, review_factory, product_factory, mark, expected_status):
 
     product = product_factory()
     # arrange
@@ -113,7 +179,7 @@ def test_validate_mark(api_auth_client, review_factory, product_factory, mark, e
 
 
 @pytest.mark.django_db
-def test_validate_product(api_auth_client, review_factory, product_factory):
+def test_validate_product_on_create_review(api_auth_client, review_factory, product_factory):
 
     # arrange
     payload = {
@@ -122,9 +188,8 @@ def test_validate_product(api_auth_client, review_factory, product_factory):
     }
     url = reverse("product-reviews-list")
 
-    # act for auth user
+    # for auth user
     resp = api_auth_client.post(url, payload)
-    # assert for auth user
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
     product = product_factory()
@@ -132,83 +197,181 @@ def test_validate_product(api_auth_client, review_factory, product_factory):
         'mark': 3,
         'product_id': product.id  # product's id that exists
     }
-    # act for auth user
+    # for auth user
     resp = api_auth_client.post(url, payload)
-    # assert for auth user
     assert resp.status_code == HTTP_201_CREATED
 
     # Unique together user and product
-    # act for auth user
+    # for auth user
     resp = api_auth_client.post(url, payload)
-    # assert for auth user
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
-def test_update_review(api_auth_client, product_factory, review_factory):
+def test_update_review_with_permissions(
+        api_auth_client, api_auth_admin, product_factory, review_factory, api_auth_another_client
+):
+
     # arrange
     product = product_factory()
-    # arrange
     payload = {
         'mark': 3,
         'product_id': product.id
     }
     url = reverse("product-reviews-list")
 
-    # only owners can update
-    # act
-    resp = api_auth_client.patch(url, payload)
-    # assert
-    assert resp.status_code == HTTP_403_FORBIDDEN
-
+    # Create review
     # act for auth user
     resp = api_auth_client.post(url, payload)
-    # assert for auth user
-    assert resp.status_code == HTTP_201_CREATED
     resp_json = resp.json()
-    assert resp_json
-    assert resp_json['id']
+    review_id = resp_json['id']
 
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+
+    # updated payload
+    payload = {
+        'mark': 3
+    }
+
+    # only owners can update
+    # for not owners
+    resp = api_auth_another_client.patch(url, payload)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+    # for admin
+    resp = api_auth_admin.patch(url, payload)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+    # for owner
+    resp = api_auth_client.patch(url, payload)
+    assert resp.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_validate_product_on_update_review(api_auth_client, review_factory, product_factory):
+
+    # arrange
+    product = product_factory()
     payload = {
         'mark': 3,
-        'text': 'any text'
+        'product_id': product.id
     }
-    url = reverse("product-reviews-detail", kwargs={'pk': resp_json['id']})
+    url = reverse("product-reviews-list")
 
+    # Create review
+    # act for auth user
+    resp = api_auth_client.post(url, payload)
+    resp_json = resp.json()
+    review_id = resp_json['id']
+
+    # change payload for update with the same product
+    payload = {
+        'product_id': product.id
+    }
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
     # act
     resp = api_auth_client.patch(url, payload)
-
     # assert
+    assert resp.status_code == HTTP_400_BAD_REQUEST
 
+    # change payload for update with does not exist product
+    payload = {
+        'product_id': product.id + 1
+    }
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+    resp = api_auth_client.patch(url, payload)
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+
+    # change payload for update with new product
+    product = product_factory()
+    payload = {
+        'product_id': product.id
+    }
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+    # act
+    resp = api_auth_client.patch(url, payload)
+    # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
     assert len(resp_json) == 8  # fields count
-    assert resp_json['id'] == resp_json['id']
-    assert resp_json['mark'] == payload['mark']
-    assert resp_json['text'] == payload['text']
+    assert resp_json['id'] == review_id
+    assert resp_json['product']['id'] == payload['product_id']
+    assert resp_json['product_id'] == payload['product_id']
+
+
+@pytest.mark.parametrize(
+    ["mark", "expected_status"],
+    (
+        ("3", HTTP_200_OK),
+        ("6", HTTP_400_BAD_REQUEST),
+    )
+)
+@pytest.mark.django_db
+def test_validate_mark_on_update_review(api_auth_client, review_factory, mark, expected_status, product_factory):
+
+    # arrange
+    product = product_factory()
+    payload = {
+        'mark': 3,
+        'product_id': product.id
+    }
+    url = reverse("product-reviews-list")
+
+    # Create review
+    # act for auth user
+    resp = api_auth_client.post(url, payload)
+    resp_json = resp.json()
+    review_id = resp_json['id']
+
+    # Change payload for update
+    payload = {
+        'mark': mark,
+    }
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+
+    # for auth user
+    resp = api_auth_client.patch(url, payload)
+    assert resp.status_code == expected_status
 
 
 @pytest.mark.django_db
-def test_delete_product(api_auth_admin, review_factory):
+def test_delete_product_with_permissions(
+        api_client, api_auth_client, api_auth_admin, review_factory, product_factory, api_auth_another_client
+):
 
     # arrange
-    review = review_factory()
-    url = reverse("product-reviews-detail", kwargs={'pk': review.id})
+    product = product_factory()
+    payload = {
+        'mark': 3,
+        'product_id': product.id
+    }
+    url = reverse("product-reviews-list")
 
-    # act
-    resp = api_auth_admin.delete(url)
+    # Create review
+    # act for auth user
+    resp = api_auth_client.post(url, payload)
+    resp_json = resp.json()
+    review_id = resp_json['id']
 
-    # assert
+    # UNAUTHORIZED
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+    resp = api_client.delete(url)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
+
+    # for not owner
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+    resp = api_auth_another_client.delete(url)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+    # for owner
+    url = reverse("product-reviews-detail", kwargs={'pk': review_id})
+    resp = api_auth_client.delete(url)
     assert resp.status_code == HTTP_204_NO_CONTENT
 
-    # arrange
+    # for admin
     review = review_factory()
     url = reverse("product-reviews-detail", kwargs={'pk': review.id})
-
-    # act
     resp = api_auth_admin.delete(url)
-
-    # assert
     assert resp.status_code == HTTP_204_NO_CONTENT
 
