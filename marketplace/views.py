@@ -1,11 +1,11 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, OR
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, OR, AND
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter
 from marketplace.models import Product, Review, Order, Collection
-from marketplace.permissions import IsOwnerUser, OnlyAdminEditToOrderStatus, IsAdminUserOrReadOnly
+from marketplace.permissions import OnlyAdminEditToOrderStatus, IsAdminUserOrReadOnly, IsOwnerUser
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
 
 
@@ -26,17 +26,19 @@ class ReviewViewSet(ModelViewSet):
     """ Viewset для отзывов. """
 
     queryset = Review.objects.select_related('creator', 'product')
-    permission_classes = [IsAuthenticatedOrReadOnly & IsAdminUserOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = ReviewSerializer
 
     filterset_class = ReviewFilter
 
     def get_permissions(self):
         """Получение прав для действий."""
-        if self.action in ["partial_update", 'delete', 'update']:
-            return [OR(IsOwnerUser(), IsAdminUser())]
-
-        return []
+        if self.action in ["partial_update", 'update']:
+            return [IsOwnerUser(), IsAuthenticated()]
+        elif self.action is 'delete':
+            return [IsOwnerUser(), IsAdminUser()]
+        else:
+            return super(ReviewViewSet, self).get_permissions()
 
 
 class OrderViewSet(ModelViewSet):
