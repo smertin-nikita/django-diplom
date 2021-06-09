@@ -38,7 +38,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'creator', 'product', 'product_id', 'text', 'mark', 'created_at', 'updated_at', )
         validators = [
             serializers.UniqueTogetherValidator(
-                queryset=Review.objects.all(),
+                queryset=Review.objects.only('creator', 'product_id'),
                 fields=['creator', 'product_id']
             )
         ]
