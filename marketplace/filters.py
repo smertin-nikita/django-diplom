@@ -1,4 +1,4 @@
-from django_filters import rest_framework as filters, DateFromToRangeFilter
+from django_filters import rest_framework as filters, DateTimeFromToRangeFilter
 from rest_framework.filters import SearchFilter
 
 from marketplace.models import Product, Review, Order
@@ -17,7 +17,7 @@ class ProductFilter(filters.FilterSet):
 class ReviewFilter(filters.FilterSet):
     """Фильтры для товаров."""
 
-    created_at = DateFromToRangeFilter()
+    created_at = DateTimeFromToRangeFilter()
 
     class Meta:
         model = Review
@@ -34,8 +34,8 @@ class OrderProductSearchFilter(SearchFilter):
 class OrderFilter(filters.FilterSet):
     """Фильтры для товаров."""
 
-    created_at = DateFromToRangeFilter()
-    updated_at = DateFromToRangeFilter()
+    created_at = DateTimeFromToRangeFilter()
+    updated_at = DateTimeFromToRangeFilter()
 
     class Meta:
         model = Order
