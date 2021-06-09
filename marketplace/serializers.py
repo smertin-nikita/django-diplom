@@ -55,7 +55,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Метод для создания"""
 
-        # todo Костыль чтобы при записи требовался только product_id, а в отображении был instance product
+        # todo Не знаю как правильно делать запросы. Либо отправлять только id сущности(product_id)
+        #  либо всю сущность(product). Решил сделать только id
+        #  Костыль чтобы при записи требовался только product_id, а в отображении был instance product
         product = validated_data['product_id']
         validated_data['product_id'] = product.id
 
@@ -84,25 +86,25 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ProductOrderSerializer(serializers.ModelSerializer):
 
     product = ProductSerializer(read_only=True)
-    # product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all())
+    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all())
 
     class Meta:
         model = ProductOrder
-        fields = ('product', 'quantity',)
+        fields = ('product', 'quantity', 'product_id',)
 
-    def to_internal_value(self, data):
-
-        ret = super().to_internal_value(data)
-        #
-        #
-        # try:
-        #     ret['product'] = Product.objects.get(id=data['product'])
-        # except ObjectDoesNotExist:
-        #     raise serializers.ValidationError({"product": 'does not exist.'})
-
-        ret['creator'] = self.context["request"].user
-
-        return ret
+    # def to_internal_value(self, data):
+    #
+    #     ret = super().to_internal_value(data)
+    #     #
+    #     #
+    #     # try:
+    #     #     ret['product'] = Product.objects.get(id=data['product'])
+    #     # except ObjectDoesNotExist:
+    #     #     raise serializers.ValidationError({"product": 'does not exist.'})
+    #
+    #     ret['creator'] = self.context["request"].user
+    #
+    #     return ret
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -135,12 +137,19 @@ class OrderSerializer(serializers.ModelSerializer):
         """Метод для создания"""
 
         order_positions = validated_data.pop('order_positions')
-        amount = sum(order_data['product'].price * order_data['quantity'] for order_data in order_positions)
+        amount = sum(order_data['product_id'].price * order_data['quantity'] for order_data in order_positions)
         order = Order.objects.create(creator=validated_data['creator'], amount=amount)
         for order_data in order_positions:
+            product = order_data['product_id']
+            order_data['product_id'] = product.id
             ProductOrder.objects.create(order=order, **order_data)
         return order
 
+    def validate(self, data):
+        if not len(data['order_positions']):
+            raise serializers.ValidationError({'product_id': 'The field is required'})
+
+        return data
 
 class CollectionSerializer(serializers.ModelSerializer):
     """Serializer для подборки товаров."""
