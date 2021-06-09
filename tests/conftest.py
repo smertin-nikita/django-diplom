@@ -5,9 +5,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 
-
-# @pytest.fixture(params=['non_auth', 'user', 'admin'])
-
 @pytest.fixture
 def api_client():
     """ Фикстура для клиента API. """
@@ -27,6 +24,17 @@ def api_auth_admin():
 
 @pytest.fixture
 def api_auth_client():
+    """ Фикстура для авторизованного клиента API. """
+
+    api_client = APIClient()
+    user = baker.make(get_user_model(), is_staff=False)
+    token = Token.objects.create(user=user)
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+    return api_client
+
+
+@pytest.fixture
+def api_auth_another_client():
     """ Фикстура для авторизованного клиента API. """
 
     api_client = APIClient()
