@@ -50,8 +50,6 @@ class IsOwnerOrAdminUser(BasePermission):
         return obj.creator == request.user or request.user.is_staff
 
 
-
-
 class OnlyAdminEditToOrderStatus(IsAdminUser):
     """
     Object-level permission to allows only admins to edit status of order.
