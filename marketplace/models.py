@@ -138,6 +138,7 @@ class Order(DateInfo):
     amount = models.DecimalField(
         null=False,
         blank=True,
+        default=0,
         max_digits=8,
         decimal_places=2,
         verbose_name='Сумма',
