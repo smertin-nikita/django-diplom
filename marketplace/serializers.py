@@ -84,40 +84,38 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ProductOrderSerializer(serializers.ModelSerializer):
 
     product = ProductSerializer(read_only=True)
+    # product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all())
 
     class Meta:
         model = ProductOrder
         fields = ('product', 'quantity',)
 
-    # def to_internal_value(self, data):
-    #
-    #     ret = super().to_internal_value(data)
-    #
-    #     if not data.get('product'):
-    #         raise serializers.ValidationError({"product": "This field is required."})
-    #
-    #     try:
-    #         ret['product'] = Product.objects.get(id=data['product'])
-    #     except ObjectDoesNotExist:
-    #         raise serializers.ValidationError({"product": 'does not exist.'})
-    #
-    #     ret['creator'] = self.context["request"].user
-    #
-    #     return ret
+    def to_internal_value(self, data):
 
+        ret = super().to_internal_value(data)
+        #
+        #
+        # try:
+        #     ret['product'] = Product.objects.get(id=data['product'])
+        # except ObjectDoesNotExist:
+        #     raise serializers.ValidationError({"product": 'does not exist.'})
+
+        ret['creator'] = self.context["request"].user
+
+        return ret
 
 
 class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
 
-    # creator = UserSerializer(
-    #     read_only=True,
-    # )
-
-    creator = serializers.PrimaryKeyRelatedField(
+    creator = UserSerializer(
         read_only=True,
-        default=serializers.CurrentUserDefault()
     )
+
+    # creator = serializers.PrimaryKeyRelatedField(
+    #     read_only=True,
+    #     default=serializers.CurrentUserDefault()
+    # )
 
     order_positions = ProductOrderSerializer(many=True)
 
@@ -126,14 +124,19 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount', 'order_positions', 'status', 'creator', 'created_at', 'updated_at', )
         extra_kwargs = {'amount': {'required': False}}
 
+    def to_internal_value(self, data):
+
+        ret = super().to_internal_value(data)
+        ret['creator'] = self.context["request"].user
+
+        return ret
+
     def create(self, validated_data):
         """Метод для создания"""
 
-        creator = self.context["request"].user
-
         order_positions = validated_data.pop('order_positions')
         amount = sum(order_data['product'].price * order_data['quantity'] for order_data in order_positions)
-        order = Order.objects.create(creator=creator, amount=amount)
+        order = Order.objects.create(creator=validated_data['creator'], amount=amount)
         for order_data in order_positions:
             ProductOrder.objects.create(order=order, **order_data)
         return order
