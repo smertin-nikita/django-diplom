@@ -44,7 +44,7 @@ class ReviewViewSet(ModelViewSet):
 class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
 
-    queryset = Order.objects.all().prefetch_related('order_positions')
+    queryset = Order.objects.select_related('order_positions')
     permission_classes = [IsAuthenticated & IsOwnerOrAdminUser]
     serializer_class = OrderSerializer
 
@@ -65,15 +65,13 @@ class OrderViewSet(ModelViewSet):
     #     if product_id is not None:
     #         filter_params = {'order_positions__product__id': product_id}
     #
-    #     user = self.request.user
-    #     if user.is_staff:
-    #         return super().get_queryset().filter(**filter_params)
-    #
     #     return user.order_set.filter(**filter_params)
 
     def get_permissions(self):
         """Получение прав для действий."""
-        if self.action in ["partial_update"]:
+        if self.action == "create":
+            return [IsAuthenticated()]
+        elif self.action in ["partial_update", "update"]:
             return [OnlyAdminEditToOrderStatus()]
         else:
             return super(OrderViewSet, self).get_permissions()

@@ -83,7 +83,8 @@ class Review(DateInfo):
         on_delete=models.CASCADE,
         blank=False,
         null=False,
-        verbose_name='Товар'
+        verbose_name='Товар',
+        related_name='reviews'
     )
 
     text = models.TextField(
@@ -105,7 +106,7 @@ class ProductOrder(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='positions')
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_positions')
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(default=1)
 
 
 class Order(DateInfo):
@@ -132,7 +133,8 @@ class Order(DateInfo):
 
     products = models.ManyToManyField(
         Product, through=ProductOrder,
-        verbose_name='Позиции'
+        verbose_name='Позиции',
+        blank=False
     )
 
     amount = models.DecimalField(

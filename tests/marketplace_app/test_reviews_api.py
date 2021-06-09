@@ -142,7 +142,7 @@ def test_create_reviews_with_permission(api_client, api_auth_client, api_auth_ad
     assert resp.status_code == HTTP_201_CREATED
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 8  # fields count
+    assert len(resp_json) == 7  # fields count
     assert resp_json['product']['id'] == payload['product_id']
     assert resp_json['product_id'] == payload['product_id']
     assert resp_json['mark'] == payload['mark']
@@ -294,7 +294,7 @@ def test_validate_product_on_update_review(api_auth_client, review_factory, prod
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 8  # fields count
+    assert len(resp_json) == 7  # fields count
     assert resp_json['id'] == review_id
     assert resp_json['product']['id'] == payload['product_id']
     assert resp_json['product_id'] == payload['product_id']

@@ -1,31 +1,39 @@
 import pytest
+from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
+from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
-def test_retrieve_order_with_permissions(api_client, api_auth_client, api_auth_admin, api_auth_another_client, order_factory):
+def test_retrieve_order_with_permissions(order_factory, api_client, user_factory):
 
     # arrange
-    obj = order_factory()
-    url = reverse("orders-detail", kwargs={'pk': obj.id})
-
-    # todo Придумать как вытаскивать клиента из obj
+    order = order_factory()
+    url = reverse("orders-detail", kwargs={'pk': order.id})
 
     # for UNAUTHORIZED client
     resp = api_client.get(url)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
 
-    # for not owner client
-    resp = api_client.get(url)
-    assert resp.status_code == HTTP_401_UNAUTHORIZED
+    # for NOT OWNER client
+    token = Token.objects.create(user=user_factory())
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
+    resp = api_client.get(url)
+    assert resp.status_code == HTTP_404_NOT_FOUND
+
+    # for OWNER client
+    token = Token.objects.create(user=order.creator)
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+    resp = api_client.get(url)
+    assert resp.status_code == HTTP_200_OK
+
+    # todo попробовать остальные поля
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 8  # fields count
-    assert resp_json['id'] == obj.id
-    assert resp_json['creator']['id'] == obj.creator.id
-    assert resp_json['product']['id'] == obj.product.id
-    assert resp_json['product_id'] == obj.product_id
-    assert resp_json['text'] == obj.text
-    assert resp_json['mark'] == obj.mark
+    assert len(resp_json) == 7  # fields count
+    assert resp_json['id'] == order.id
+    assert resp_json['creator']['id'] == order.creator.id
+    # assert resp_json['product_id'] == order.product_id
+    assert resp_json['status'] == order.status

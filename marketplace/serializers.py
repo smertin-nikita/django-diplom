@@ -68,7 +68,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Метод для обновления"""
 
-        # todo Если в бизнес логике можно менять продукт в отзыве.
+        # todo Если в бизнес логике можно менять продукт в отзыве. Лишний запрос
         if validated_data.get('product_id'):
             if Review.objects.filter(creator=validated_data['creator'], product=validated_data['product_id']).exists():
                 raise serializers.ValidationError(
