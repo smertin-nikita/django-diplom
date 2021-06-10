@@ -147,7 +147,6 @@ class Order(DateInfo):
         max_digits=12,
         decimal_places=2,
         verbose_name='Сумма',
-        editable=False,
         validators=[validators.MinValueValidator(0), validators.MaxValueValidator(100000000)]
     )
 
