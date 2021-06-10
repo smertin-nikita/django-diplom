@@ -123,10 +123,12 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'amount', 'order_positions', 'status', 'creator', 'created_at', 'updated_at', )
-        extra_kwargs = {'amount': {'required': False}}
+        # extra_kwargs = {'amount': {'required': False}}
 
     def to_internal_value(self, data):
 
+        # add not editable field so that run validate fieldname method
+        # data['amount'] = 0
         ret = super().to_internal_value(data)
         ret['creator'] = self.context["request"].user
 
@@ -137,6 +139,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
         order_positions = validated_data.pop('order_positions')
         amount = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in order_positions)
+        self.is_valid(raise_exception=True)
         order = Order.objects.create(amount=amount, **validated_data)
 
         for order_data in order_positions:
@@ -145,6 +148,12 @@ class OrderSerializer(serializers.ModelSerializer):
             ProductOrder.objects.create(order=order, **order_data)
 
         return order
+
+    def validate_amount(self, data):
+        if not len(data):
+            raise serializers.ValidationError({'order_positions': 'The field cannot be an empty list'})
+
+        return data
 
     def validate_order_positions(self, data):
         if not len(data):
