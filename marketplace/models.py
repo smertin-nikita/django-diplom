@@ -43,10 +43,10 @@ class Product(DateInfo):
     price = models.DecimalField(
         null=False,
         blank=False,
-        max_digits=12,
+        max_digits=9,
         decimal_places=2,
         verbose_name='Цена',
-        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(100000),]
+        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(100000)]
     )
 
     def __str__(self):
@@ -141,10 +141,11 @@ class Order(DateInfo):
         null=False,
         blank=True,
         default=0,
-        max_digits=8,
+        max_digits=12,
         decimal_places=2,
         verbose_name='Сумма',
-        editable=False
+        editable=False,
+        validators=[validators.MinValueValidator(0), validators.MaxValueValidator(100000000)]
     )
 
     status = models.TextField(
