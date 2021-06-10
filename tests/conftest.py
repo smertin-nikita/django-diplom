@@ -57,7 +57,17 @@ def product_factory():
 def order_factory():
     """ Фабрика для заказов. """
     def func(**kwargs):
-        return baker.make('order', **kwargs)
+        return baker.make('order', make_m2m=True, **kwargs)
+
+    return func
+
+
+@pytest.fixture
+def order_positions_factory():
+    """ Фабрика для позиций в заказе. """
+    def func(**kwargs):
+        products = baker.make('product', **kwargs)
+        return [{'product_id': obj.id} for obj in products]
 
     return func
 
