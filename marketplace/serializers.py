@@ -129,7 +129,12 @@ class OrderSerializer(serializers.ModelSerializer):
 
         # add not editable field so that run validate fieldname method
         # data['amount'] = 0
+        # TODO Как сделать так чтобы после вызова to internal value, когда все поля в order_positions провалидируются
+        #  добавить amount
         ret = super().to_internal_value(data)
+        order_positions = data.get('order_positions')
+        data['amount'] = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in order_positions)
+
         ret['creator'] = self.context["request"].user
 
         return ret
@@ -139,7 +144,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
         order_positions = validated_data.pop('order_positions')
         amount = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in order_positions)
-        self.is_valid(raise_exception=True)
+
         order = Order.objects.create(amount=amount, **validated_data)
 
         for order_data in order_positions:

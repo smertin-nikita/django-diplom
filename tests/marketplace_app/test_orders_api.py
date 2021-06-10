@@ -218,7 +218,7 @@ def test_validate_not_exists_product_in_order_positions_on_create_order(
 @pytest.mark.django_db
 def test_validate_amount_on_create_order(api_auth_client, order_positions_factory, product_factory):
 
-    products = product_factory(_quantity=10, price=100000)
+    products = product_factory(_quantity=1, price=100000)
     # NOT EXIST PRODUCT
     payload = {
         "order_positions": order_positions_factory(products=products, quantity=10000)
