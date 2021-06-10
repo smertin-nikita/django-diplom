@@ -18,11 +18,10 @@ def test_retrieve_review(api_client, review_factory):
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 8  # fields count
+    assert len(resp_json) == 7  # fields count
     assert resp_json['id'] == obj.id
     assert resp_json['creator']['id'] == obj.creator.id
     assert resp_json['product']['id'] == obj.product.id
-    assert resp_json['product_id'] == obj.product_id
     assert resp_json['text'] == obj.text
     assert resp_json['mark'] == obj.mark
 
@@ -47,7 +46,6 @@ def test_list_reviews(api_client, review_factory):
         assert obj['id'] == objs[i].id
         assert obj['creator']['id'] == objs[i].creator.id
         assert obj['product']['id'] == objs[i].product.id
-        assert obj['product_id'] == objs[i].product_id
         assert obj['text'] == objs[i].text
         assert obj['mark'] == objs[i].mark
 
@@ -72,7 +70,6 @@ def test_filter_creator_id_reviews(api_client, review_factory):
     assert resp_json[0]['id'] == reviews[0].id
     assert resp_json[0]['creator']['id'] == reviews[0].creator.id
     assert resp_json[0]['product']['id'] == reviews[0].product.id
-    assert resp_json[0]['product_id'] == reviews[0].product_id
     assert resp_json[0]['text'] == reviews[0].text
     assert resp_json[0]['mark'] == reviews[0].mark
 
@@ -97,7 +94,6 @@ def test_filter_product_id_reviews(api_client, review_factory):
     assert resp_json[0]['id'] == reviews[0].id
     assert resp_json[0]['creator']['id'] == reviews[0].creator.id
     assert resp_json[0]['product']['id'] == reviews[0].product.id
-    assert resp_json[0]['product_id'] == reviews[0].product_id
     assert resp_json[0]['text'] == reviews[0].text
     assert resp_json[0]['mark'] == reviews[0].mark
 
@@ -144,7 +140,6 @@ def test_create_reviews_with_permission(api_client, api_auth_client, api_auth_ad
     assert resp_json
     assert len(resp_json) == 7  # fields count
     assert resp_json['product']['id'] == payload['product_id']
-    assert resp_json['product_id'] == payload['product_id']
     assert resp_json['mark'] == payload['mark']
 
     # for admin
@@ -297,7 +292,6 @@ def test_validate_product_on_update_review(api_auth_client, review_factory, prod
     assert len(resp_json) == 7  # fields count
     assert resp_json['id'] == review_id
     assert resp_json['product']['id'] == payload['product_id']
-    assert resp_json['product_id'] == payload['product_id']
 
 
 @pytest.mark.parametrize(

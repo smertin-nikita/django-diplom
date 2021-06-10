@@ -31,7 +31,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     product = ProductSerializer(
         read_only=True
     )
-    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all())
+    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all(), write_only=True)
 
     class Meta:
         model = Review
@@ -86,7 +86,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ProductOrderSerializer(serializers.ModelSerializer):
 
     product = ProductSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all())
+    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all(), write_only=True)
 
     class Meta:
         model = ProductOrder
