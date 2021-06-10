@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from marketplace.models import Product, Review, Order, ProductOrder
@@ -31,7 +30,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     product = ProductSerializer(
         read_only=True
     )
-    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all(), write_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=Product.objects.all(),
+        write_only=True,
+    )
 
     class Meta:
         model = Review
@@ -60,15 +63,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         #  Костыль чтобы при записи требовался только product_id, а в отображении был instance product
         product = validated_data['product_id']
         validated_data['product_id'] = product.id
+        validated_data['product'] = product
 
-        review = Review.objects.create(product=product, **validated_data)
+        review = Review.objects.create(**validated_data)
 
         return review
 
     def update(self, instance, validated_data):
         """Метод для обновления"""
 
-        # todo Если в бизнес логике можно менять продукт в отзыве. Лишний запрос
+        # todo Если в бизнес логике можно менять продукт в отзыве.
         if validated_data.get('product_id'):
             if Review.objects.filter(creator=validated_data['creator'], product=validated_data['product_id']).exists():
                 raise serializers.ValidationError(
