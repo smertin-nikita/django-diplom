@@ -1,10 +1,11 @@
+from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, OR, AND
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter, IsOwnerOrAdminFilterBackend
-from marketplace.models import Product, Review, Order, Collection
+from marketplace.models import Product, Review, Order, Collection, ProductOrder
 from marketplace.permissions import OnlyAdminEditToOrderStatus, IsAdminUserOrReadOnly, IsOwnerUser, IsOwnerOrAdminUser
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
 
@@ -44,7 +45,8 @@ class ReviewViewSet(ModelViewSet):
 class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
 
-    queryset = Order.objects.select_related('order_positions')
+    productorder_set = ProductOrder.objects.select_related('product')
+    queryset = Order.objects.prefetch_related(Prefetch('order_positions', queryset=productorder_set))
     permission_classes = [IsAuthenticated & IsOwnerOrAdminUser]
     serializer_class = OrderSerializer
 

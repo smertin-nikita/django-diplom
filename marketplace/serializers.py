@@ -118,11 +118,6 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    # creator = serializers.PrimaryKeyRelatedField(
-    #     read_only=True,
-    #     default=serializers.CurrentUserDefault()
-    # )
-
     order_positions = ProductOrderSerializer(many=True)
 
     class Meta:
@@ -141,19 +136,22 @@ class OrderSerializer(serializers.ModelSerializer):
         """Метод для создания"""
 
         order_positions = validated_data.pop('order_positions')
-        amount = sum(order_data['product_id'].price * order_data['quantity'] for order_data in order_positions)
-        order = Order.objects.create(creator=validated_data['creator'], amount=amount)
+        amount = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in order_positions)
+        order = Order.objects.create(amount=amount, **validated_data)
+
         for order_data in order_positions:
             product = order_data['product_id']
             order_data['product_id'] = product.id
             ProductOrder.objects.create(order=order, **order_data)
+
         return order
 
-    def validate(self, data):
-        if not len(data['order_positions']):
-            raise serializers.ValidationError({'product_id': 'The field is required'})
+    def validate_order_positions(self, data):
+        if not len(data):
+            raise serializers.ValidationError({'order_positions': 'The field cannot be an empty list'})
 
         return data
+
 
 class CollectionSerializer(serializers.ModelSerializer):
     """Serializer для подборки товаров."""
