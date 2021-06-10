@@ -106,7 +106,10 @@ class ProductOrder(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='positions')
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_positions')
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField(
+        default=1,
+        validators=[validators.MinValueValidator(1), validators.MaxValueValidator(10000)]
+    )
 
 
 class Order(DateInfo):
