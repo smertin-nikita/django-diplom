@@ -66,8 +66,12 @@ def order_factory():
 def order_positions_factory():
     """ Фабрика для позиций в заказе. """
     def func(**kwargs):
+        quantity = kwargs.pop('quantity', None)
         products = kwargs.pop('products', None) or baker.make('product', **kwargs)
-        return [{'product_id': obj.id} for obj in products]
+        if quantity:
+            return [{'product_id': obj.id, 'quantity': quantity} for obj in products]
+        else:
+            return [{'product_id': obj.id} for obj in products]
 
     return func
 
