@@ -114,27 +114,28 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
 
+    MAX_AMOUNT_VALUE = 100000000
+    MIN_AMOUNT_VALUE = 1
+
     creator = UserSerializer(
         read_only=True,
     )
 
-    order_positions = ProductOrderSerializer(many=True)
+    positions = ProductOrderSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ('id', 'amount', 'order_positions', 'status', 'creator', 'created_at', 'updated_at', )
-        # extra_kwargs = {'amount': {'required': False}}
+        fields = ('id', 'amount', 'positions', 'status', 'creator', 'created_at', 'updated_at', )
+        extra_kwargs = {
+            'amount': {'read_only': True},
+            'status': {'read_only': True},
+            'created_at': {'read_only': True},
+            'updated_at': {'read_only': True},
+        }
 
     def to_internal_value(self, data):
 
-        # add not editable field so that run validate fieldname method
-        # data['amount'] = 0
-        # TODO Как сделать так чтобы после вызова to internal value, когда все поля в order_positions провалидируются
-        #  добавить amount
         ret = super().to_internal_value(data)
-        order_positions = data.get('order_positions')
-        data['amount'] = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in order_positions)
-
         ret['creator'] = self.context["request"].user
 
         return ret
@@ -142,27 +143,32 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Метод для создания"""
 
-        order_positions = validated_data.pop('order_positions')
-        amount = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in order_positions)
+        positions = validated_data.pop('positions')
+        order = Order.objects.create(**validated_data)
 
-        order = Order.objects.create(amount=amount, **validated_data)
-
-        for order_data in order_positions:
+        for order_data in positions:
             product = order_data['product_id']
             order_data['product_id'] = product.id
             ProductOrder.objects.create(order=order, **order_data)
 
         return order
 
-    def validate_amount(self, data):
-        if not len(data):
-            raise serializers.ValidationError({'order_positions': 'The field cannot be an empty list'})
+    def validate(self, data):
+        """ Calculate and validate amount of order."""
+
+        positions = data.get('positions')
+        data['amount'] = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in positions)
+        # min and max possible amount of order
+        if data['amount'] < self.MIN_AMOUNT_VALUE:
+            raise serializers.ValidationError(f"The amount cannot be less than {self.MIN_AMOUNT_VALUE}")
+        if data['amount'] > self.MAX_AMOUNT_VALUE:
+            raise serializers.ValidationError(f"The amount cannot be more than {self.MAX_AMOUNT_VALUE}")
 
         return data
 
-    def validate_order_positions(self, data):
+    def validate_positions(self, data):
         if not len(data):
-            raise serializers.ValidationError({'order_positions': 'The field cannot be an empty list'})
+            raise serializers.ValidationError({'positions': 'The field cannot be an empty list'})
 
         return data
 

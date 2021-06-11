@@ -63,7 +63,7 @@ def order_factory():
 
 
 @pytest.fixture
-def order_positions_factory():
+def positions_factory():
     """ Фабрика для позиций в заказе. """
     def func(**kwargs):
         quantity = kwargs.pop('quantity', None)

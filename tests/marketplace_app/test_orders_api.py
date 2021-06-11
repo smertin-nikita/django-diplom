@@ -66,7 +66,7 @@ def test_retrieve_order_owner_client(order_factory, api_client, user_factory):
     assert resp_json['creator']['id'] == order.creator.id
     assert resp_json['status'] == order.status
     assert decimal.Decimal(resp_json['amount']) == order.amount
-    for i, product in enumerate(resp_json['order_positions']):
+    for i, product in enumerate(resp_json['positions']):
         assert product
 
 
@@ -130,10 +130,10 @@ def test_list_orders_for_admin_client(api_client, order_factory, user_factory):
 
 
 @pytest.mark.django_db
-def test_create_order_for_unauthorized_client(api_client, order_positions_factory):
+def test_create_order_for_unauthorized_client(api_client, positions_factory):
     # arrange
     payload = {
-        'order_positions': order_positions_factory(_quantity=10)
+        'positions': positions_factory(_quantity=10)
     }
     url = reverse("orders-list")
 
@@ -143,14 +143,14 @@ def test_create_order_for_unauthorized_client(api_client, order_positions_factor
 
 
 @pytest.mark.django_db
-def test_create_order_for_authorized_client(api_client, order_positions_factory, user_factory, product_factory):
+def test_create_order_for_authorized_client(api_client, positions_factory, user_factory, product_factory):
     # arrange
     products = product_factory(_quantity=10, price=100)
     # _quantity=10 * price=100
     test_amount = 10 * 100
     # quantity for order positions is 1
     payload = {
-        "order_positions": order_positions_factory(products=products)
+        "positions": positions_factory(products=products)
     }
 
     url = reverse("orders-list")
@@ -168,12 +168,12 @@ def test_create_order_for_authorized_client(api_client, order_positions_factory,
     assert len(resp_json) == 7  # fields count
     assert resp_json['creator']['id'] == creator.id
     assert decimal.Decimal(resp_json['amount']) == decimal.Decimal(test_amount)
-    for i, obj in enumerate(resp_json['order_positions']):
+    for i, obj in enumerate(resp_json['positions']):
         assert obj['product']['id'] == products[i].id
 
 
 @pytest.mark.django_db
-def test_validate_without_order_positions_on_create_order(api_auth_client, order_positions_factory, product_factory):
+def test_validate_without_positions_on_create_order(api_auth_client, positions_factory, product_factory):
     # without order_positions
     payload = {}
     url = reverse("orders-list")
@@ -183,31 +183,31 @@ def test_validate_without_order_positions_on_create_order(api_auth_client, order
 
 
 @pytest.mark.django_db
-def test_validate_empty_order_positions_on_create_order(api_auth_client, order_positions_factory):
+def test_validate_empty_positions_on_create_order(api_auth_client, positions_factory):
     # empty order_positions
-    payload = {"order_positions": []}
+    payload = {"positions": []}
     url = reverse("orders-list")
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
-def test_validate_miss_product_id_in_order_positions_on_create_order(api_auth_client, order_positions_factory):
+def test_validate_miss_product_id_in_positions_on_create_order(api_auth_client, positions_factory):
     # empty order_positions
-    payload = {"order_positions": [{}]}
+    payload = {"positions": [{}]}
     url = reverse("orders-list")
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
-def test_validate_not_exists_product_in_order_positions_on_create_order(
-        api_auth_client, order_positions_factory, product_factory):
+def test_validate_not_exists_product_in_positions_on_create_order(
+        api_auth_client, positions_factory, product_factory):
 
     product = product_factory()
     # NOT EXIST PRODUCT
     payload = {
-        "order_positions": {'product_id': product.id + 1}
+        "positions": {'product_id': product.id + 1}
     }
     url = reverse("orders-list")
     # for AUTH client
@@ -216,17 +216,29 @@ def test_validate_not_exists_product_in_order_positions_on_create_order(
 
 
 @pytest.mark.django_db
-def test_validate_amount_on_create_order(api_auth_client, order_positions_factory, product_factory):
-
-    products = product_factory(_quantity=1, price=100000)
-    # NOT EXIST PRODUCT
+def test_validate_amount_on_create_order(api_auth_client, positions_factory, product_factory):
+    # test amount = 10000000000.00 cannot be more then 100000000
+    products = product_factory(_quantity=10, price=100000)
     payload = {
-        "order_positions": order_positions_factory(products=products, quantity=10000)
+        "positions": positions_factory(products=products, quantity=10000)
     }
     url = reverse("orders-list")
     # for AUTH client
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_validate_quantity_in_positions_on_create_order(api_auth_client, positions_factory, product_factory):
+    # test quantity = 10001.00 cannot be more then 10000
+    payload = {
+        "positions": positions_factory(quantity=10001)
+    }
+    url = reverse("orders-list")
+    # for AUTH client
+    resp = api_auth_client.post(url, payload, format='json')
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+
 
 
 

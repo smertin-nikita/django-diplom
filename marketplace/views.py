@@ -46,7 +46,7 @@ class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
 
     productorder_set = ProductOrder.objects.select_related('product')
-    queryset = Order.objects.prefetch_related(Prefetch('order_positions', queryset=productorder_set))
+    queryset = Order.objects.prefetch_related(Prefetch('positions', queryset=productorder_set))
     permission_classes = [IsAuthenticated & IsOwnerOrAdminUser]
     serializer_class = OrderSerializer
 
