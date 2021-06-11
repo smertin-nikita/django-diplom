@@ -71,10 +71,10 @@ class OrderViewSet(ModelViewSet):
 
     def get_permissions(self):
         """Получение прав для действий."""
-        if self.action == "create":
+        if self.action in ["create"]:
             return [IsAuthenticated()]
         elif self.action in ["partial_update", "update"]:
-            return [OnlyAdminEditToOrderStatus()]
+            return [IsAuthenticated(), IsAdminUser()]
         else:
             return super(OrderViewSet, self).get_permissions()
 
