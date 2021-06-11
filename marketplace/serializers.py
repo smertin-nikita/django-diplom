@@ -134,8 +134,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
     # def to_internal_value(self, data):
     #
+    #     data['amount'] = 0
     #     ret = super().to_internal_value(data)
-    #     ret['creator'] = self.context["request"].user
     #
     #     return ret
 
@@ -153,27 +153,26 @@ class OrderSerializer(serializers.ModelSerializer):
 
         return order
 
-    def update(self, instance, validated_data):
-        """Метод для создания"""
-
-        positions = validated_data.pop('positions')
-        for order_data in positions:
-            order_data['product'] = order_data.pop('product_id')
-            ProductOrder.objects.update(order=instance, **order_data)
-
-        return super().update(instance, validated_data)
+    # def update(self, instance, validated_data):
+    #     """Метод для создания"""
+    #
+    #
+    #
+    #     return super().update(instance, validated_data)
 
     def validate(self, data):
         """ Calculate and validate amount of order."""
 
-
-        positions = data.get('positions')
-        data['amount'] = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in positions)
-        # min and max possible amount of order
-        if data['amount'] < self.MIN_AMOUNT_VALUE:
-            raise serializers.ValidationError(f"The amount cannot be less than {self.MIN_AMOUNT_VALUE}")
-        if data['amount'] > self.MAX_AMOUNT_VALUE:
-            raise serializers.ValidationError(f"The amount cannot be more than {self.MAX_AMOUNT_VALUE}")
+        if self.context["request"].method == "POST":
+            positions = data.get('positions')
+            data['amount'] = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in positions)
+            # min and max possible amount of order
+            if data['amount'] < self.MIN_AMOUNT_VALUE:
+                raise serializers.ValidationError(f"The amount cannot be less than {self.MIN_AMOUNT_VALUE}")
+            if data['amount'] > self.MAX_AMOUNT_VALUE:
+                raise serializers.ValidationError(f"The amount cannot be more than {self.MAX_AMOUNT_VALUE}")
+        else:
+            data.pop('positions', None)
 
         return data
 

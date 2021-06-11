@@ -307,26 +307,42 @@ def test_update_order_for_owner_client(api_client, positions_factory, order_fact
 
 
 @pytest.mark.django_db
-def test_update_order_for_admin_client(api_auth_admin, positions_factory, order_factory):
+def test_update_order_for_admin_client(api_auth_admin, positions_factory, order_factory, user_factory, api_client):
     # arrange
-    order = order_factory()
+    creator = user_factory()
+    token = Token.objects.create(user=creator)
+    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
     payload = {
-        'positions': positions_factory(_quantity=10),
-        'status': 'IN_PROGRESS'
+        'positions': positions_factory(_quantity=10)
     }
 
+    # for OWNER client
+    # create
+    url = reverse("orders-list")
+    resp = api_client.post(url, payload, format='json')
+    order = resp.json()
+    assert resp.status_code == HTTP_201_CREATED
+
+    # update
+    payload = {
+        'positions': positions_factory(_quantity=10),
+        'amount': decimal.Decimal(1),
+        'status': 'DONE'
+    }
     # for ADMIN client
-    url = reverse("orders-detail", kwargs={'pk': order.id})
+    url = reverse("orders-detail", kwargs={'pk': order['id']})
     resp = api_auth_admin.patch(url, payload, format='json')
     assert resp.status_code == HTTP_200_OK
 
     resp_json = resp.json()
     assert resp_json
     assert len(resp_json) == 7  # fields count
-    assert resp_json['creator']['id'] == order.creator.id
+    assert resp_json['creator']['id'] == order['creator']['id']
+    assert resp_json['amount'] == order['amount']
     assert resp_json['status'] == payload['status']
     for i, obj in enumerate(resp_json['positions']):
-        assert obj['product']['id'] == payload['positions'][i]
+        assert obj['product']['id'] == order['positions'][i]['product']['id']
 
 
 
