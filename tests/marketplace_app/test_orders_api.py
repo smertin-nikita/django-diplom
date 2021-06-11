@@ -234,29 +234,38 @@ def test_validate_amount_on_create_order(api_auth_client, positions_factory, pro
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.django_db
+def test_validate_status_for_not_admin_on_create_order(api_auth_client, positions_factory):
+    # to Edit status allows only admins
+    payload = {
+        "positions": positions_factory(),
+        "status": "DONE"
+    }
+    url = reverse("orders-list")
+    # for AUTH client
+    resp = api_auth_client.post(url, payload, format='json')
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+
 @pytest.mark.parametrize(
-    ["status", "expected_status"],
+    ["status", "expected_status_code"],
     (
-        ("NEW", "NEW"),
-        ("IN_PROGRESS", "NEW"),
-        ("DONE", "NEW"),
-        ("INVALID_STATUS", "NEW")
+        ("NEW", HTTP_201_CREATED),
+        ("IN_PROGRESS", HTTP_201_CREATED),
+        ("DONE", HTTP_201_CREATED),
+        ("INVALID_STATUS", HTTP_400_BAD_REQUEST)
     )
 )
 @pytest.mark.django_db
-def test_validate_status_on_create_order(status, expected_status, api_auth_client, positions_factory):
-    # on create the status is always will be NEW
+def test_validate_status_on_create_order(status, expected_status_code, api_auth_admin, positions_factory):
     payload = {
         "positions": positions_factory(),
         "status": status
     }
     url = reverse("orders-list")
     # for AUTH client
-    resp = api_auth_client.post(url, payload, format='json')
-    assert resp.status_code == HTTP_201_CREATED
-    resp_json = resp.json()
-    assert resp_json
-    assert resp_json['status'] == expected_status
+    resp = api_auth_admin.post(url, payload, format='json')
+    assert resp.status_code == expected_status_code
 
 
 @pytest.mark.django_db
