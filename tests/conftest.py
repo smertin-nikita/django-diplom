@@ -68,6 +68,9 @@ def order_positions_factory():
     def func(**kwargs):
         quantity = kwargs.pop('quantity', None)
         products = kwargs.pop('products', None) or baker.make('product', **kwargs)
+        if not isinstance(products, list):
+            products = [products]
+
         if quantity:
             return [{'product_id': obj.id, 'quantity': quantity} for obj in products]
         else:
