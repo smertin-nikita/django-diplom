@@ -128,33 +128,44 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount', 'positions', 'status', 'creator', 'created_at', 'updated_at', )
         extra_kwargs = {
             'amount': {'read_only': True},
-            'status': {'read_only': True},
             'created_at': {'read_only': True},
             'updated_at': {'read_only': True},
         }
 
-    def to_internal_value(self, data):
-
-        ret = super().to_internal_value(data)
-        ret['creator'] = self.context["request"].user
-
-        return ret
+    # def to_internal_value(self, data):
+    #
+    #     ret = super().to_internal_value(data)
+    #     ret['creator'] = self.context["request"].user
+    #
+    #     return ret
 
     def create(self, validated_data):
         """Метод для создания"""
+
+        validated_data['creator'] = self.context["request"].user
 
         positions = validated_data.pop('positions')
         order = Order.objects.create(**validated_data)
 
         for order_data in positions:
-            product = order_data['product_id']
-            order_data['product_id'] = product.id
+            order_data['product'] = order_data.pop('product_id')
             ProductOrder.objects.create(order=order, **order_data)
 
         return order
 
+    def update(self, instance, validated_data):
+        """Метод для создания"""
+
+        positions = validated_data.pop('positions')
+        for order_data in positions:
+            order_data['product'] = order_data.pop('product_id')
+            ProductOrder.objects.update(order=instance, **order_data)
+
+        return super().update(instance, validated_data)
+
     def validate(self, data):
         """ Calculate and validate amount of order."""
+
 
         positions = data.get('positions')
         data['amount'] = sum(order_data['product_id'].price * order_data.get('quantity', 1) for order_data in positions)

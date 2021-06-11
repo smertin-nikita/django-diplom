@@ -46,11 +46,11 @@ class IsOwnerOrAdminUser(BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Instance must have an attribute named `user`.
+        # Instance must have an attribute named `creator`.
         return obj.creator == request.user or request.user.is_staff
 
 
-class OnlyAdminEditToOrderStatus(IsAdminUser):
+class OnlyAdminEditOrderStatus(IsAdminUser):
     """
     Object-level permission to allows only admins to edit status of order.
     """
