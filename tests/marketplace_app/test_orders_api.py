@@ -121,22 +121,75 @@ def test_list_orders_for_admin_client(api_auth_admin, order_factory, user_factor
 
 
 @pytest.mark.django_db
-def test_filter_status_for_admin_client(api_auth_admin, order_factory, user_factory):
+def test_filter_status_orders(api_auth_admin, order_factory, user_factory):
     # arrange
     objs = order_factory(_quantity=10)
-    TEST_OBJ_ID = 0
-    TEST_STATUS = 'DONE'
-    url = reverse("orders-detail", kwargs={'pk': objs[TEST_OBJ_ID].id})
+    test_obj_id = 0
+    test_status = 'DONE'
+    url = reverse("orders-detail", kwargs={'pk': objs[test_obj_id].id})
     resp = api_auth_admin.patch(url, {'status': 'DONE'})
     assert resp.status_code == HTTP_200_OK
 
     url = reverse("orders-list")
 
     # for Admin client
-    resp = api_auth_admin.get(url, {'status': TEST_STATUS})
+    resp = api_auth_admin.get(url, {'status': test_status})
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json[TEST_OBJ_ID]['status'] == TEST_STATUS
+    assert resp_json[test_obj_id]['status'] == test_status
+
+
+@pytest.mark.django_db
+def test_order_filter_amount_orders(api_auth_admin, order_factory, user_factory):
+    # arrange
+    objs = order_factory(_quantity=10)
+    max_amount = max(obj.amount for obj in objs)
+    min_amount = min(obj.amount for obj in objs)
+
+    url = reverse("orders-list")
+
+    # for Admin client
+    resp = api_auth_admin.get(url, {'ordering': 'amount'})
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert decimal.Decimal(resp_json[0]['amount']) == decimal.Decimal(min_amount)
+    assert decimal.Decimal(resp_json[-1]['amount']) == decimal.Decimal(max_amount)
+
+
+@pytest.mark.django_db
+def test_filter_create_at_orders(api_auth_admin, order_factory):
+
+    # arrange
+    orders = order_factory(_quantity=10)
+    url = reverse("orders-list")
+
+    # act
+    # Делаю slice с 2 по 7 включительно и того должно быть 6 записей
+    resp = api_auth_admin.get(url, {'created_at_after': orders[2].created_at, 'created_at_before': orders[7].created_at})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 6
+
+
+@pytest.mark.django_db
+def test_filter_updated_at_orders(api_auth_admin, order_factory):
+
+    # arrange
+    orders = order_factory(_quantity=10)
+    url = reverse("orders-list")
+
+    # act
+    # Делаю slice с 2 по 7 включительно и того должно быть 6 записей
+    resp = api_auth_admin.get(url, {'updated_at_after': orders[2].updated_at, 'updated_at_before': orders[7].updated_at})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 6
 
 
 @pytest.mark.django_db
