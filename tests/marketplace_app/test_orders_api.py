@@ -108,19 +108,35 @@ def test_list_orders_for_owner_client(api_client, order_factory):
 
 
 @pytest.mark.django_db
-def test_list_orders_for_admin_client(api_client, order_factory, user_factory):
+def test_list_orders_for_admin_client(api_auth_admin, order_factory, user_factory):
     # arrange
     objs = order_factory(_quantity=10)
     url = reverse("orders-list")
 
     # for Admin client
-    token = Token.objects.create(user=user_factory(is_staff=True))
-    api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-
-    resp = api_client.get(url)
+    resp = api_auth_admin.get(url)
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert len(resp_json) == len(objs)
+
+
+@pytest.mark.django_db
+def test_filter_status_for_admin_client(api_auth_admin, order_factory, user_factory):
+    # arrange
+    objs = order_factory(_quantity=10)
+    TEST_OBJ_ID = 0
+    TEST_STATUS = 'DONE'
+    url = reverse("orders-detail", kwargs={'pk': objs[TEST_OBJ_ID].id})
+    resp = api_auth_admin.patch(url, {'status': 'DONE'})
+    assert resp.status_code == HTTP_200_OK
+
+    url = reverse("orders-list")
+
+    # for Admin client
+    resp = api_auth_admin.get(url, {'status': TEST_STATUS})
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json[TEST_OBJ_ID]['status'] == TEST_STATUS
 
 
 @pytest.mark.django_db
@@ -343,8 +359,6 @@ def test_update_order_for_admin_client(api_auth_admin, positions_factory, order_
     assert resp_json['status'] == payload['status']
     for i, obj in enumerate(resp_json['positions']):
         assert obj['product']['id'] == order['positions'][i]['product']['id']
-
-
 
 
 
