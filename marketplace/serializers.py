@@ -96,20 +96,6 @@ class ProductOrderSerializer(serializers.ModelSerializer):
         model = ProductOrder
         fields = ('product', 'quantity', 'product_id',)
 
-    # def to_internal_value(self, data):
-    #
-    #     ret = super().to_internal_value(data)
-    #     #
-    #     #
-    #     # try:
-    #     #     ret['product'] = Product.objects.get(id=data['product'])
-    #     # except ObjectDoesNotExist:
-    #     #     raise serializers.ValidationError({"product": 'does not exist.'})
-    #
-    #     ret['creator'] = self.context["request"].user
-    #
-    #     return ret
-
 
 class OrderSerializer(serializers.ModelSerializer):
     """Serializer для заказа."""
@@ -132,13 +118,6 @@ class OrderSerializer(serializers.ModelSerializer):
             'updated_at': {'read_only': True},
         }
 
-    # def to_internal_value(self, data):
-    #
-    #     data['amount'] = 0
-    #     ret = super().to_internal_value(data)
-    #
-    #     return ret
-
     def create(self, validated_data):
         """Метод для создания"""
 
@@ -152,13 +131,6 @@ class OrderSerializer(serializers.ModelSerializer):
             ProductOrder.objects.create(order=order, **order_data)
 
         return order
-
-    # def update(self, instance, validated_data):
-    #     """Метод для создания"""
-    #
-    #
-    #
-    #     return super().update(instance, validated_data)
 
     def validate(self, data):
         """ Calculate and validate amount of order."""
