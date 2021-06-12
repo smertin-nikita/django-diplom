@@ -55,24 +55,22 @@ class OrderViewSet(ModelViewSet):
 
     filterset_class = OrderFilter
 
-    # def get_queryset(self):
-    #     """queryset с заказами только для создателя или для админа c фильтрацией по продукту из позиции"""
-    #
-    #     self.check_object_permissions(self.request, self.request.user)
-    #
-    #     filter_params = {}
-    #
-    #     # фильтрация для продукта из позиции
-    #     product_id = self.request.query_params.get('product_id')
-    #     if product_id is not None:
-    #         filter_params = {'order_positions__product__id': product_id}
-    #
-    #     return user.order_set.filter(**filter_params)
+    def get_queryset(self):
+        """queryset с заказами только для создателя или для админа c фильтрацией по продукту из позиции"""
+
+        filter_params = {}
+
+        # фильтрация для продукта из позиции
+        product_id = self.request.query_params.get('product_id')
+        if product_id is not None:
+            filter_params = {'positions__product__id': product_id}
+
+        return self.queryset.filter(**filter_params)
 
     def get_permissions(self):
         """Получение прав для действий."""
         if self.action == "create":
-            return [IsAuthenticated(), IsOnlyAdminEditOrderStatus()]
+             return [IsAuthenticated(), IsOnlyAdminEditOrderStatus()]
         elif self.action in ["partial_update", "update"]:
             return [IsAuthenticated(), IsAdminUser()]
         else:

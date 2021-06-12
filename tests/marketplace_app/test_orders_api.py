@@ -182,7 +182,7 @@ def test_filter_updated_at_orders(api_auth_admin, order_factory):
     url = reverse("orders-list")
 
     # act
-    # Делаю slice с 2 по 7 включительно и того должно быть 6 записей
+    # Делаю slice с 2 по 7  и того должно быть 6 записей
     resp = api_auth_admin.get(url, {'updated_at_after': orders[2].updated_at, 'updated_at_before': orders[7].updated_at})
 
     # assert
@@ -190,6 +190,29 @@ def test_filter_updated_at_orders(api_auth_admin, order_factory):
     resp_json = resp.json()
     assert resp_json
     assert len(resp_json) == 6
+
+
+@pytest.mark.django_db
+def test_filter_product_id_orders(api_auth_admin, order_factory, positions_factory, product_factory):
+    # arrange
+    url = reverse("orders-list")
+
+    # for AUTH client
+    for i in range(5):
+        resp = api_auth_admin.post(url, {"positions": positions_factory()}, format='json')
+        assert resp.status_code == HTTP_201_CREATED
+
+    test_order = resp.json()
+    test_product_id = test_order['positions'][0]['product']['id']
+    # act
+    resp = api_auth_admin.get(url, {'product_id': test_product_id})
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert len(resp_json) == 1
+    assert resp_json[0]['id'] == test_order['id']
+    resp_json[0]['positions'][0]['product']['id'] = test_product_id
 
 
 @pytest.mark.django_db
