@@ -6,7 +6,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter, IsOwnerOrAdminFilterBackend
 from marketplace.models import Product, Review, Order, Collection, ProductOrder
-from marketplace.permissions import IsOnlyAdminEditOrderStatus, IsAdminUserOrReadOnly, IsOwnerUser, IsOwnerOrAdminUser
+from marketplace.permissions import IsAdminUserOrReadOnly, IsOwnerUser, IsOwnerOrAdminUser
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
 
 
@@ -70,8 +70,8 @@ class OrderViewSet(ModelViewSet):
     def get_permissions(self):
         """Получение прав для действий."""
         if self.action == "create":
-             return [IsAuthenticated(), IsOnlyAdminEditOrderStatus()]
-        elif self.action in ["partial_update", "update"]:
+             return [IsAuthenticated()]
+        elif self.action in ["partial_update", "update", 'destroy']:
             return [IsAuthenticated(), IsAdminUser()]
         else:
             return super(OrderViewSet, self).get_permissions()

@@ -113,10 +113,23 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ('id', 'amount', 'positions', 'status', 'creator', 'created_at', 'updated_at', )
         extra_kwargs = {
+            'status': {'read_only': True},
             'amount': {'read_only': True},
             'created_at': {'read_only': True},
             'updated_at': {'read_only': True},
         }
+
+    def __init__(self, *args, **kwargs):
+        # Check if we're updating.
+        # updating = "instance" in kwargs and "data" in kwargs
+
+        # Make sure the original initialization is done first.
+        super().__init__(*args, **kwargs)
+
+        # If we're updating, make the positions field read only and status not read only.
+        if self.context['request'].method == 'PUT' or self.context['request'].method == 'PATCH':
+            self.fields['positions'].read_only = True
+            self.fields['status'].read_only = False
 
     def create(self, validated_data):
         """Метод для создания"""
@@ -143,8 +156,6 @@ class OrderSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(f"The amount cannot be less than {self.MIN_AMOUNT_VALUE}")
             if data['amount'] > self.MAX_AMOUNT_VALUE:
                 raise serializers.ValidationError(f"The amount cannot be more than {self.MAX_AMOUNT_VALUE}")
-        else:
-            data.pop('positions', None)
 
         return data
 

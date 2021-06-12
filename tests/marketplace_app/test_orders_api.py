@@ -4,7 +4,7 @@ import pytest
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_201_CREATED, \
-    HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
+    HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_204_NO_CONTENT
 
 
 @pytest.mark.django_db
@@ -164,14 +164,13 @@ def test_filter_create_at_orders(api_auth_admin, order_factory):
     url = reverse("orders-list")
 
     # act
-    # Делаю slice с 2 по 7 включительно и того должно быть 6 записей
-    resp = api_auth_admin.get(url, {'created_at_after': orders[2].created_at, 'created_at_before': orders[7].created_at})
+    resp = api_auth_admin.get(url, {'created_at_after': orders[0].created_at, 'created_at_before': orders[0].created_at})
 
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 6
+    assert len(resp_json) == 1
 
 
 @pytest.mark.django_db
@@ -182,14 +181,13 @@ def test_filter_updated_at_orders(api_auth_admin, order_factory):
     url = reverse("orders-list")
 
     # act
-    # Делаю slice с 2 по 7  и того должно быть 6 записей
-    resp = api_auth_admin.get(url, {'updated_at_after': orders[2].updated_at, 'updated_at_before': orders[7].updated_at})
+    resp = api_auth_admin.get(url, {'updated_at_after': orders[0].updated_at, 'updated_at_before': orders[0].updated_at})
 
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
-    assert len(resp_json) == 6
+    assert len(resp_json) == 1
 
 
 @pytest.mark.django_db
@@ -326,38 +324,26 @@ def test_validate_amount_on_create_order(api_auth_client, positions_factory, pro
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
-@pytest.mark.django_db
-def test_validate_status_for_not_admin_on_create_order(api_auth_client, positions_factory):
-    # to Edit status allows only admins
-    payload = {
-        "positions": positions_factory(),
-        "status": "DONE"
-    }
-    url = reverse("orders-list")
-    # for AUTH client
-    resp = api_auth_client.post(url, payload, format='json')
-    assert resp.status_code == HTTP_403_FORBIDDEN
-
-
 @pytest.mark.parametrize(
-    ["status", "expected_status_code"],
+    ["status", "expected_status"],
     (
-        ("NEW", HTTP_201_CREATED),
-        ("IN_PROGRESS", HTTP_201_CREATED),
-        ("DONE", HTTP_201_CREATED),
-        ("INVALID_STATUS", HTTP_400_BAD_REQUEST)
+        ("NEW", 'NEW'),
+        ("IN_PROGRESS", 'NEW'),
+        ("DONE", 'NEW'),
     )
 )
 @pytest.mark.django_db
-def test_validate_status_on_create_order(status, expected_status_code, api_auth_admin, positions_factory):
+def test_validate_status_on_create_order(status, expected_status, api_auth_client, positions_factory):
     payload = {
         "positions": positions_factory(),
         "status": status
     }
     url = reverse("orders-list")
     # for AUTH client
-    resp = api_auth_admin.post(url, payload, format='json')
-    assert resp.status_code == expected_status_code
+    resp = api_auth_client.post(url, payload, format='json')
+    assert resp.status_code == HTTP_201_CREATED
+    resp_json = resp.json()
+    assert resp_json['status'] == expected_status
 
 
 @pytest.mark.django_db
@@ -365,7 +351,7 @@ def test_update_order_for_unauthorized_client(api_client, positions_factory, ord
     # arrange
     order = order_factory()
     payload = {
-        'positions': positions_factory(_quantity=10)
+        'status': 'DONE'
     }
     url = reverse("orders-detail", kwargs={'pk': order.id})
 
@@ -437,4 +423,35 @@ def test_update_order_for_admin_client(api_auth_admin, positions_factory, order_
         assert obj['product']['id'] == order['positions'][i]['product']['id']
 
 
+@pytest.mark.django_db
+def test_delete_order_for_unauthorized_client(api_client, order_factory):
+    # arrange
+    order = order_factory()
+
+    # UNAUTHORIZED
+    url = reverse("orders-detail", kwargs={'pk': order.id})
+    resp = api_client.delete(url)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_delete_order_for_authorized_client(api_auth_client, order_factory):
+    # arrange
+    order = order_factory()
+
+    # for not owner
+    url = reverse("orders-detail", kwargs={'pk': order})
+    resp = api_auth_client.delete(url)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+def test_delete_order_for_admin_client(api_auth_admin, order_factory):
+    # arrange
+    order = order_factory()
+
+    # for admin
+    url = reverse("orders-detail", kwargs={'pk': order.id})
+    resp = api_auth_admin.delete(url)
+    assert resp.status_code == HTTP_204_NO_CONTENT
 

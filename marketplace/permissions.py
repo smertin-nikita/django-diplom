@@ -50,16 +50,6 @@ class IsOwnerOrAdminUser(BasePermission):
         return obj.creator == request.user or request.user.is_staff
 
 
-class IsOnlyAdminEditOrderStatus(IsAdminUser):
-    """
-    Object-level permission to allows only admins to edit status of order.
-    """
-    def has_permission(self, request, view):
-        # Instance must have an attribute named `status`.
-        if bool(request.data.get('status')):
-            return super().has_permission(request, view)
-        return True
-
 
 
 
