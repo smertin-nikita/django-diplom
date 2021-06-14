@@ -12,12 +12,9 @@ def test_retrieve_product(api_client, product_factory):
 
     # arrange
     product = product_factory()
-
     url = reverse("products-detail", kwargs={'pk': product.id})
-
     # act
     resp = api_client.get(url)
-
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
@@ -55,9 +52,8 @@ def test_list_products(api_client, product_factory):
 @pytest.mark.django_db
 def test_filter_price_products(api_client, product_factory):
     # arrange
-    test_price = decimal.Decimal(random.randrange(99999999999))/100
-    products = product_factory(_quantity=10)
-
+    test_price = decimal.Decimal(50000)
+    products = product_factory(_quantity=20)
     url = reverse("products-list")
 
     # act
@@ -115,7 +111,7 @@ def test_filter_search_products(api_client, product_factory):
 
 
 @pytest.mark.django_db
-def test_user_permissions_for_product(api_client, api_auth_client, api_auth_admin, product_factory):
+def test_create_product_for_unauthorized_client(api_client, product_factory):
 
     payload = {
         'title': 'test',
@@ -126,63 +122,94 @@ def test_user_permissions_for_product(api_client, api_auth_client, api_auth_admi
     resp = api_client.post(url, payload)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
 
+
+@pytest.mark.django_db
+def test_create_product_for_nonadmin_client(api_auth_client, product_factory):
+    payload = {
+        'title': 'test',
+        'price': '500'
+    }
+    # auth user create
+    url = reverse("products-list")
+    resp = api_auth_client.post(url, payload)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+def test_create_product_for_admin_client(api_auth_admin, product_factory):
+    payload = {
+        'title': 'test',
+        'price': '500'
+    }
+    # admin create
+    url = reverse("products-list")
+    resp = api_auth_admin.post(url, payload)
+    assert resp.status_code == HTTP_201_CREATED
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 6  # fields count
+    assert resp_json['title'] == payload['title']
+    assert decimal.Decimal(resp_json['price']) == decimal.Decimal(payload['price'])
+
+
+@pytest.mark.django_db
+def test_update_product_for_unauthorized_client(api_client, product_factory):
+    payload = {
+        'title': 'test',
+        'price': '500'
+    }
     # non auth user update
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
     resp = api_client.patch(url, payload)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
 
-    # non auth user delete
-    product = product_factory()
-    url = reverse("products-detail", kwargs={'pk': product.id})
-    resp = api_client.delete(url, payload)
-    assert resp.status_code == HTTP_401_UNAUTHORIZED
 
-    # auth user create
-    url = reverse("products-list")
-    resp = api_auth_client.post(url, payload)
-    assert resp.status_code == HTTP_403_FORBIDDEN
-
+@pytest.mark.django_db
+def test_update_product_for_nonadmin_client(api_auth_client, product_factory):
+    payload = {
+        'title': 'test',
+        'price': '500'
+    }
     # auth user update
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
     resp = api_auth_client.patch(url, payload)
     assert resp.status_code == HTTP_403_FORBIDDEN
 
-    # auth user delete
-    product = product_factory()
-    url = reverse("products-detail", kwargs={'pk': product.id})
-    resp = api_auth_client.delete(url, payload)
-    assert resp.status_code == HTTP_403_FORBIDDEN
 
-    # admin create
-    url = reverse("products-list")
-    resp = api_auth_admin.post(url, payload)
-    assert resp.status_code == HTTP_201_CREATED
-
+@pytest.mark.django_db
+def test_update_product_for_admin_client(api_auth_admin, product_factory):
+    payload = {
+        'title': 'test',
+        'price': '500',
+        'description': 'test'
+    }
     # admin update
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
     resp = api_auth_admin.patch(url, payload)
     assert resp.status_code == HTTP_200_OK
-
-    # admin delete
-    product = product_factory()
-    url = reverse("products-detail", kwargs={'pk': product.id})
-    resp = api_auth_admin.delete(url, payload)
-    assert resp.status_code == HTTP_204_NO_CONTENT
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == 6  # fields count
+    assert resp_json['id'] == product.id
+    assert resp_json['title'] == payload['title']
+    assert resp_json['description'] == payload['description']
+    assert decimal.Decimal(resp_json['price']) == decimal.Decimal(payload['price'])
 
 
 @pytest.mark.parametrize(
     ["price", "expected_status"],
     (
-        ("400", HTTP_201_CREATED),
+        ("0", HTTP_201_CREATED),
+        ("100000", HTTP_201_CREATED),
         ("-100", HTTP_400_BAD_REQUEST),
-        ("100000000", HTTP_400_BAD_REQUEST),
+        ("100001", HTTP_400_BAD_REQUEST),
     )
 )
 @pytest.mark.django_db
-def test_create_product(api_auth_admin, price, expected_status):
+def test_validate_price_on_create_product(api_auth_admin, price, expected_status):
 
     # arrange
     payload = {
@@ -195,50 +222,33 @@ def test_create_product(api_auth_admin, price, expected_status):
     resp = api_auth_admin.post(url, payload)
 
     # assert
-
     assert resp.status_code == expected_status
     resp_json = resp.json()
     assert resp_json
 
 
 @pytest.mark.django_db
-def test_update_product(api_auth_admin, product_factory):
-    # arrange
-
+def test_delete_product_for_unauthorized_client(api_client, product_factory):
+    # non auth user delete
     product = product_factory()
-
-    payload = {
-        'title': 'test',
-        'price': 500,
-        'description': 'any text',
-    }
     url = reverse("products-detail", kwargs={'pk': product.id})
-
-    # act
-    resp = api_auth_admin.patch(url, payload)
-
-    # assert
-
-    assert resp.status_code == HTTP_200_OK
-    resp_json = resp.json()
-    assert resp_json
-    assert len(resp_json) == 6  # fields count
-    assert resp_json['id'] == product.id
-    assert resp_json['title'] == payload['title']
-    assert decimal.Decimal(resp_json['price']) == decimal.Decimal(payload['price'])
-    assert resp_json['description'] == payload['description']
+    resp = api_client.delete(url)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.django_db
-def test_delete_product(api_auth_admin, product_factory):
-
-    # arrange
+def test_delete_product_for_nonadmin_client(api_auth_client, product_factory):
+    # auth user delete
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
+    resp = api_auth_client.delete(url)
+    assert resp.status_code == HTTP_403_FORBIDDEN
 
-    # act
+
+@pytest.mark.django_db
+def test_delete_product_for_admin_client(api_auth_admin, product_factory):
+    # admin delete
+    product = product_factory()
+    url = reverse("products-detail", kwargs={'pk': product.id})
     resp = api_auth_admin.delete(url)
-
-    # assert
     assert resp.status_code == HTTP_204_NO_CONTENT
-
