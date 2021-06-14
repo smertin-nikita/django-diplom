@@ -19,6 +19,10 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('id', 'title', 'description', 'price', 'created_at', 'updated_at',)
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+            'updated_at': {'read_only': True},
+        }
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -39,6 +43,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'creator', 'product', 'product_id', 'text', 'mark', 'created_at', 'updated_at', )
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+            'updated_at': {'read_only': True},
+        }
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=Review.objects.only('creator', 'product_id'),
@@ -46,10 +54,18 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         ]
 
+    def __init__(self, *args, **kwargs):
+
+        # Make sure the original initialization is done first.
+        super().__init__(*args, **kwargs)
+
+        # If we're updating, make the positions field read only and status not read only.
+        if self.context['request'].method in ['PUT', 'PATCH']:
+            self.fields['creator'].read_only = True
+
     def to_internal_value(self, data):
 
-        # todo Только при правильно выставленных permission, так как обновлять создателя отзыва нельзя.
-        #  eсли делать в методе create не пройдет валидация на required field в UniqueTogetherValidator.
+        # TODO eсли делать в методе create не пройдет валидация на required field в UniqueTogetherValidator.
         ret = super().to_internal_value(data)
         ret['creator'] = self.context["request"].user
 
@@ -58,33 +74,27 @@ class ReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Метод для создания"""
 
-        # todo Не знаю как правильно делать запросы. Либо отправлять только id сущности(product_id)
-        #  либо всю сущность(product). Решил сделать только id
-        #  Костыль чтобы при записи требовался только product_id, а в отображении был instance product
-        product = validated_data['product_id']
-        validated_data['product_id'] = product.id
-        validated_data['product'] = product
-
-        review = Review.objects.create(**validated_data)
-
-        return review
+        validated_data['product'] = validated_data.pop('product_id')
+        return Review.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         """Метод для обновления"""
 
-        # todo Если в бизнес логике можно менять продукт в отзыве.
-        if validated_data.get('product_id'):
-            if Review.objects.filter(creator=validated_data['creator'], product=validated_data['product_id']).exists():
-                raise serializers.ValidationError(
-                    {"non_field_errors": ["The fields creator, product_id must make a unique set."]}
-                )
-            else:
-                product = validated_data['product_id']
-                validated_data['product_id'] = product.id
-                validated_data['product'] = product
-                return super().update(instance, validated_data)
-
+        validated_data['product'] = validated_data.pop('product_id')
         return super().update(instance, validated_data)
+
+    def validate(self, data):
+        """ Calculate and validate amount of order."""
+
+        if self.context["request"].method in ['PUT', 'PATCH']:
+            if data.get('product_id'):
+                if Review.objects.filter(creator=data['creator'],
+                                         product=data['product_id']).exists():
+                    raise serializers.ValidationError(
+                        {"non_field_errors": ["The fields creator, product_id must make a unique set."]}
+                    )
+
+        return data
 
 
 class ProductOrderSerializer(serializers.ModelSerializer):
@@ -120,14 +130,12 @@ class OrderSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        # Check if we're updating.
-        # updating = "instance" in kwargs and "data" in kwargs
 
         # Make sure the original initialization is done first.
         super().__init__(*args, **kwargs)
 
         # If we're updating, make the positions field read only and status not read only.
-        if self.context['request'].method == 'PUT' or self.context['request'].method == 'PATCH':
+        if self.context['request'].method in ['PUT', 'PATCH']:
             self.fields['positions'].read_only = True
             self.fields['status'].read_only = False
 
