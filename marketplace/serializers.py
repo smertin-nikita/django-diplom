@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from marketplace.models import Product, Review, Order, ProductOrder
+from marketplace.models import Product, Review, Order, ProductOrder, Collection
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,7 +42,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'creator', 'product', 'product_id', 'text', 'mark', 'created_at', 'updated_at', )
+        fields = ('id', 'text', 'mark', 'created_at', 'updated_at', 'creator', 'product', 'product_id',)
         extra_kwargs = {
             'created_at': {'read_only': True},
             'updated_at': {'read_only': True},
@@ -122,7 +122,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'amount', 'positions', 'status', 'creator', 'created_at', 'updated_at', )
+        fields = ('id', 'amount',  'status', 'created_at', 'updated_at', 'creator', 'positions',)
         extra_kwargs = {
             'status': {'read_only': True},
             'amount': {'read_only': True},
@@ -178,8 +178,14 @@ class OrderSerializer(serializers.ModelSerializer):
 class CollectionSerializer(serializers.ModelSerializer):
     """Serializer для подборки товаров."""
 
+    products = ProductSerializer(read_only=True, many=True)
+
     class Meta:
-        model = Order
-        fields = ('id', 'title', 'text', 'created_at', 'updated_at', )
+        model = Collection
+        fields = ('id', 'title', 'text', 'created_at', 'updated_at', 'products',)
+        extra_kwargs = {
+            'created_at': {'read_only': True},
+            'updated_at': {'read_only': True},
+        }
 
 
