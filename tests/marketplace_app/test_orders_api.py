@@ -191,13 +191,13 @@ def test_filter_updated_at_orders(api_auth_admin, order_factory):
 
 
 @pytest.mark.django_db
-def test_filter_product_id_orders(api_auth_admin, order_factory, positions_factory, product_factory):
+def test_filter_product_id_orders(api_auth_admin, order_factory, product_ids_factory, product_factory):
     # arrange
     url = reverse("orders-list")
 
     # for AUTH client
     for i in range(5):
-        resp = api_auth_admin.post(url, {"positions": positions_factory()}, format='json')
+        resp = api_auth_admin.post(url, {"positions": product_ids_factory()}, format='json')
         assert resp.status_code == HTTP_201_CREATED
 
     test_order = resp.json()
@@ -214,10 +214,10 @@ def test_filter_product_id_orders(api_auth_admin, order_factory, positions_facto
 
 
 @pytest.mark.django_db
-def test_create_order_for_unauthorized_client(api_client, positions_factory):
+def test_create_order_for_unauthorized_client(api_client, product_ids_factory):
     # arrange
     payload = {
-        'positions': positions_factory(_quantity=10)
+        'positions': product_ids_factory(_quantity=10)
     }
     url = reverse("orders-list")
 
@@ -227,14 +227,14 @@ def test_create_order_for_unauthorized_client(api_client, positions_factory):
 
 
 @pytest.mark.django_db
-def test_create_order_for_authorized_client(api_client, positions_factory, user_factory, product_factory):
+def test_create_order_for_authorized_client(api_client, product_ids_factory, user_factory, product_factory):
     # arrange
     products = product_factory(_quantity=10, price=100)
     # _quantity=10 * price=100
     test_amount = 10 * 100
     # quantity for order positions is 1
     payload = {
-        "positions": positions_factory(products=products)
+        "positions": product_ids_factory(products=products)
     }
 
     url = reverse("orders-list")
@@ -257,7 +257,7 @@ def test_create_order_for_authorized_client(api_client, positions_factory, user_
 
 
 @pytest.mark.django_db
-def test_validate_without_positions_on_create_order(api_auth_client, positions_factory, product_factory):
+def test_validate_without_positions_on_create_order(api_auth_client, product_ids_factory, product_factory):
     # without order_positions
     payload = {}
     url = reverse("orders-list")
@@ -267,7 +267,7 @@ def test_validate_without_positions_on_create_order(api_auth_client, positions_f
 
 
 @pytest.mark.django_db
-def test_validate_empty_positions_on_create_order(api_auth_client, positions_factory):
+def test_validate_empty_positions_on_create_order(api_auth_client, product_ids_factory):
     # empty order_positions
     payload = {"positions": []}
     url = reverse("orders-list")
@@ -276,7 +276,7 @@ def test_validate_empty_positions_on_create_order(api_auth_client, positions_fac
 
 
 @pytest.mark.django_db
-def test_validate_miss_product_id_in_positions_on_create_order(api_auth_client, positions_factory):
+def test_validate_miss_product_id_in_positions_on_create_order(api_auth_client, product_ids_factory):
     # empty order_positions
     payload = {"positions": [{}]}
     url = reverse("orders-list")
@@ -286,7 +286,7 @@ def test_validate_miss_product_id_in_positions_on_create_order(api_auth_client, 
 
 @pytest.mark.django_db
 def test_validate_not_exists_product_in_positions_on_create_order(
-        api_auth_client, positions_factory, product_factory):
+        api_auth_client, product_ids_factory, product_factory):
 
     product = product_factory()
     # NOT EXIST PRODUCT
@@ -300,10 +300,10 @@ def test_validate_not_exists_product_in_positions_on_create_order(
 
 
 @pytest.mark.django_db
-def test_validate_quantity_in_positions_on_create_order(api_auth_client, positions_factory, product_factory):
+def test_validate_quantity_in_positions_on_create_order(api_auth_client, product_ids_factory, product_factory):
     # test quantity = 10001.00 cannot be more then 10000
     payload = {
-        "positions": positions_factory(quantity=10001)
+        "positions": product_ids_factory(quantity=10001)
     }
     url = reverse("orders-list")
     # for AUTH client
@@ -312,11 +312,11 @@ def test_validate_quantity_in_positions_on_create_order(api_auth_client, positio
 
 
 @pytest.mark.django_db
-def test_validate_amount_on_create_order(api_auth_client, positions_factory, product_factory):
+def test_validate_amount_on_create_order(api_auth_client, product_ids_factory, product_factory):
     # test amount = 10000000000.00 cannot be more then 100000000
     products = product_factory(_quantity=10, price=100000)
     payload = {
-        "positions": positions_factory(products=products, quantity=10000)
+        "positions": product_ids_factory(products=products, quantity=10000)
     }
     url = reverse("orders-list")
     # for AUTH client
@@ -333,9 +333,9 @@ def test_validate_amount_on_create_order(api_auth_client, positions_factory, pro
     )
 )
 @pytest.mark.django_db
-def test_validate_status_on_create_order(status, expected_status, api_auth_client, positions_factory):
+def test_validate_status_on_create_order(status, expected_status, api_auth_client, product_ids_factory):
     payload = {
-        "positions": positions_factory(),
+        "positions": product_ids_factory(),
         "status": status
     }
     url = reverse("orders-list")
@@ -347,7 +347,7 @@ def test_validate_status_on_create_order(status, expected_status, api_auth_clien
 
 
 @pytest.mark.django_db
-def test_update_order_for_unauthorized_client(api_client, positions_factory, order_factory):
+def test_update_order_for_unauthorized_client(api_client, product_ids_factory, order_factory):
     # arrange
     order = order_factory()
     payload = {
@@ -361,14 +361,14 @@ def test_update_order_for_unauthorized_client(api_client, positions_factory, ord
 
 
 @pytest.mark.django_db
-def test_update_order_for_owner_client(api_client, positions_factory, order_factory, user_factory):
+def test_update_order_for_owner_client(api_client, product_ids_factory, order_factory, user_factory):
     # arrange
     creator = user_factory()
     token = Token.objects.create(user=creator)
     api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     payload = {
-        'positions': positions_factory(_quantity=10)
+        'positions': product_ids_factory(_quantity=10)
     }
 
     # for OWNER client
@@ -385,14 +385,14 @@ def test_update_order_for_owner_client(api_client, positions_factory, order_fact
 
 
 @pytest.mark.django_db
-def test_update_order_for_admin_client(api_auth_admin, positions_factory, order_factory, user_factory, api_client):
+def test_update_order_for_admin_client(api_auth_admin, product_ids_factory, order_factory, user_factory, api_client):
     # arrange
     creator = user_factory()
     token = Token.objects.create(user=creator)
     api_client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
     payload = {
-        'positions': positions_factory(_quantity=10)
+        'positions': product_ids_factory(_quantity=10)
     }
 
     # for OWNER client
@@ -404,7 +404,7 @@ def test_update_order_for_admin_client(api_auth_admin, positions_factory, order_
 
     # update
     payload = {
-        'positions': positions_factory(_quantity=10),
+        'positions': product_ids_factory(_quantity=10),
         'amount': decimal.Decimal(1),
         'status': 'DONE'
     }

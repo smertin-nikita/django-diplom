@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.viewsets import ModelViewSet
 
 from marketplace.filters import ProductFilter, ReviewFilter, OrderFilter, IsOwnerOrAdminFilterBackend
-from marketplace.models import Product, Review, Order, Collection, ProductOrder
+from marketplace.models import Product, Review, Order, Collection, OrderProduct
 from marketplace.permissions import IsAdminUserOrReadOnly, IsOwnerUser, IsOwnerOrAdminUser
 from marketplace.serializers import CollectionSerializer, OrderSerializer, ProductSerializer, ReviewSerializer
 
@@ -45,7 +45,7 @@ class ReviewViewSet(ModelViewSet):
 class OrderViewSet(ModelViewSet):
     """ Viewset для заказов. """
 
-    productorder_set = ProductOrder.objects.select_related('product')
+    productorder_set = OrderProduct.objects.select_related('product')
     queryset = Order.objects.prefetch_related(Prefetch('positions', queryset=productorder_set))
     permission_classes = [IsAuthenticated & IsOwnerOrAdminUser]
     serializer_class = OrderSerializer
@@ -81,5 +81,5 @@ class CollectionViewSet(ModelViewSet):
     """ Viewset для подборок. """
 
     queryset = Collection.objects.prefetch_related('products')
-    permission_classes = [IsAuthenticatedOrReadOnly | IsAdminUser]
+    permission_classes = [IsAuthenticatedOrReadOnly & IsAdminUserOrReadOnly]
     serializer_class = CollectionSerializer

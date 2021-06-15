@@ -101,7 +101,7 @@ class Review(DateInfo):
     )
 
 
-class ProductOrder(models.Model):
+class OrderProduct(models.Model):
     """ Позиции. Промежуточная таблица между товаром и заказом """
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -135,7 +135,7 @@ class Order(DateInfo):
     )
 
     products = models.ManyToManyField(
-        Product, through=ProductOrder,
+        Product, through=OrderProduct,
         verbose_name='Позиции',
         blank=False
     )
@@ -154,6 +154,11 @@ class Order(DateInfo):
         verbose_name='Статус',
         default=OrderStatus.NEW
     )
+
+
+class CollectionProduct(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='collection_set')
 
 
 class Collection(DateInfo):
@@ -177,7 +182,9 @@ class Collection(DateInfo):
 
     products = models.ManyToManyField(
         Product,
-        related_name='collections'
+        related_name='collections',
+        through='CollectionProduct',
+        blank=False,
     )
 
     def __str__(self):

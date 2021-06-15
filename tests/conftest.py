@@ -63,7 +63,7 @@ def order_factory():
 
 
 @pytest.fixture
-def positions_factory():
+def product_ids_factory():
     """ Фабрика для позиций в заказе. """
     def func(**kwargs):
         quantity = kwargs.pop('quantity', None)
@@ -104,3 +104,5 @@ def collection_factory():
         return baker.make('collection', make_m2m=True, **kwargs)
 
     return func
+
+

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from marketplace.models import Product, Review, Order, ProductOrder, Collection
+from marketplace.models import Product, Review, Order, OrderProduct, Collection, CollectionProduct
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -104,7 +104,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all(), write_only=True)
 
     class Meta:
-        model = ProductOrder
+        model = OrderProduct
         fields = ('product', 'quantity', 'product_id',)
 
 
@@ -148,9 +148,9 @@ class OrderSerializer(serializers.ModelSerializer):
         positions = validated_data.pop('positions')
         order = Order.objects.create(**validated_data)
 
-        for order_data in positions:
-            order_data['product'] = order_data.pop('product_id')
-            ProductOrder.objects.create(order=order, **order_data)
+        for item in positions:
+            item['product'] = item.pop('product_id')
+            OrderProduct.objects.create(order=order, **item)
 
         return order
 
@@ -170,15 +170,25 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def validate_positions(self, data):
         if not len(data):
-            raise serializers.ValidationError({'positions': 'The field cannot be an empty list'})
+            raise serializers.ValidationError(['The field cannot be an empty list'])
 
         return data
+
+
+class CollectionProductSerializer(serializers.ModelSerializer):
+
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(required=True, queryset=Product.objects.all(), write_only=True)
+
+    class Meta:
+        model = CollectionProduct
+        fields = ('product', 'product_id',)
 
 
 class CollectionSerializer(serializers.ModelSerializer):
     """Serializer для подборки товаров."""
 
-    products = ProductSerializer(read_only=True, many=True)
+    products = CollectionProductSerializer(many=True)
 
     class Meta:
         model = Collection
@@ -187,5 +197,22 @@ class CollectionSerializer(serializers.ModelSerializer):
             'created_at': {'read_only': True},
             'updated_at': {'read_only': True},
         }
+
+    def create(self, validated_data):
+        """Метод для создания"""
+
+        products = validated_data.pop('products')
+        collection = Collection.objects.create(**validated_data)
+
+        for item in products:
+            CollectionProduct.objects.create(collection=collection, product=item.pop('product_id'))
+
+        return collection
+
+    def validate_products(self, data):
+        if not len(data):
+            raise serializers.ValidationError(['The field cannot be an empty list'])
+
+        return data
 
 
