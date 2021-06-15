@@ -22,3 +22,23 @@ def test_retrieve_collection(api_client, collection_factory):
     assert resp_json['text'] == obj.text
     for i, product in enumerate(resp_json['products']):
         assert product['id'] == obj.products[i].id
+
+
+@pytest.mark.django_db
+def test_list_collection(api_client, collection_factory):
+    # arrange
+    objs = collection_factory(_quantity=10)
+    url = reverse("product-collections-list")
+
+    # act
+    resp = api_client.get(url)
+
+    # assert
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert resp_json
+    assert len(resp_json) == len(objs)
+    for i, item in enumerate(resp_json):
+        assert item['id'] == objs[i].id
+        assert item['title'] == objs[i].title
+        assert item['text'] == objs[i].text
