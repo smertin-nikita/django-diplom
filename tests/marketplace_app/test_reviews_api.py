@@ -146,6 +146,22 @@ def test_create_reviews_for_unauthorized_client(api_auth_client, product_factory
     assert resp_json['mark'] == payload['mark']
 
 
+@pytest.mark.django_db
+def test_validate_miss_mark_on_create_review(api_auth_client, product_factory):
+
+    product = product_factory()
+    # arrange
+    payload = {
+        'product_id': product.id
+    }
+    url = reverse("product-reviews-list")
+
+    # act for auth user
+    resp = api_auth_client.post(url, payload)
+    # assert for auth user
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+
+
 @pytest.mark.parametrize(
     ["mark", "expected_status"],
     (
@@ -171,6 +187,20 @@ def test_validate_mark_on_create_review(api_auth_client, product_factory, mark, 
     assert resp.status_code == expected_status
     resp_json = resp.json()
     assert resp_json
+
+
+@pytest.mark.django_db
+def test_validate_miss_product_on_create_review(api_auth_client, product_factory):
+
+    # arrange
+    payload = {
+        'mark': 3,
+    }
+    url = reverse("product-reviews-list")
+
+    # for auth user
+    resp = api_auth_client.post(url, payload)
+    assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db

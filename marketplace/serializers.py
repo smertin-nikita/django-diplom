@@ -79,8 +79,9 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Метод для обновления"""
-
-        validated_data['product'] = validated_data.pop('product_id')
+        product_id = validated_data.pop('product_id', False)
+        if product_id:
+            validated_data['product'] = product_id
         return super().update(instance, validated_data)
 
     def validate(self, data):
