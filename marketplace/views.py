@@ -70,7 +70,7 @@ class OrderViewSet(ModelViewSet):
     def get_permissions(self):
         """Получение прав для действий."""
         if self.action == "create":
-             return [IsAuthenticated()]
+            return [IsAuthenticated()]
         elif self.action in ["partial_update", "update", 'destroy']:
             return [IsAuthenticated(), IsAdminUser()]
         else:
@@ -80,6 +80,6 @@ class OrderViewSet(ModelViewSet):
 class CollectionViewSet(ModelViewSet):
     """ Viewset для подборок. """
 
-    queryset = Collection.objects.all()
+    queryset = Collection.objects.prefetch_related('products')
     permission_classes = [IsAuthenticatedOrReadOnly | IsAdminUser]
     serializer_class = CollectionSerializer
