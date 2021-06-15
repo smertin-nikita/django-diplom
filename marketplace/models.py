@@ -49,6 +49,13 @@ class Product(DateInfo):
         validators=[validators.MinValueValidator(0), validators.MaxValueValidator(100000)]
     )
 
+    # collections = models.ManyToManyField(
+    #     'Collection',
+    #     related_name='products',
+    #     through='CollectionProduct',
+    #     blank=False,
+    # )
+
     def __str__(self):
         return self.title
 
@@ -158,7 +165,7 @@ class Order(DateInfo):
 
 class CollectionProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='collection_set')
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE)
 
 
 class Collection(DateInfo):
@@ -183,7 +190,7 @@ class Collection(DateInfo):
     products = models.ManyToManyField(
         Product,
         related_name='collections',
-        through='CollectionProduct',
+        through=CollectionProduct,
         blank=False,
     )
 
