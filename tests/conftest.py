@@ -95,3 +95,12 @@ def review_factory():
         return baker.make('review', **kwargs)
 
     return func
+
+
+@pytest.fixture
+def collection_factory():
+    """ Фабрика для подборок. """
+    def func(**kwargs):
+        return baker.make('collection', make_m2m=True, **kwargs)
+
+    return func
