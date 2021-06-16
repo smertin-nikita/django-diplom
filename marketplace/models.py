@@ -143,6 +143,7 @@ class Order(DateInfo):
 
     products = models.ManyToManyField(
         Product, through=OrderProduct,
+        through_fields=["order", "product"],
         verbose_name='Позиции',
         blank=False
     )
@@ -161,6 +162,9 @@ class Order(DateInfo):
         verbose_name='Статус',
         default=OrderStatus.NEW
     )
+
+    def __str__(self):
+        return f'{self.status}, {self.amount} - {self.updated_at}'
 
 
 class CollectionProduct(models.Model):

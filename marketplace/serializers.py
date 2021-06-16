@@ -155,7 +155,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
     def validate(self, data):
-        """ Calculate and validate amount of order."""
+        """Calculate and validate amount of order."""
 
         if self.context["request"].method == "POST":
             positions = data.get('positions')
@@ -169,6 +169,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return data
 
     def validate_positions(self, data):
+        """Checks positions for empty list."""
         if not len(data):
             raise serializers.ValidationError(['The field cannot be an empty list'])
 
@@ -209,7 +210,26 @@ class CollectionSerializer(serializers.ModelSerializer):
 
         return collection
 
+    def update(self, instance, validated_data):
+        """Метод для создания"""
+
+        instance_products = CollectionProduct.objects.filter(collection=instance)
+        data_products = {item['product_id'].id: item['product_id'] for item in validated_data.pop('products')}
+
+        # Perform creations
+        for product_id, product in data_products.items():
+            if not instance_products.filter(product=product).exists():
+                CollectionProduct.objects.create(collection=instance, product=product)
+
+        # Perform deletions.
+        for obj in instance_products:
+            if obj.product_id not in data_products:
+                obj.delete()
+
+        return super().update(instance, validated_data)
+
     def validate_products(self, data):
+        """Checks products for empty list"""
         if not len(data):
             raise serializers.ValidationError(['The field cannot be an empty list'])
 

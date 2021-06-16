@@ -204,7 +204,7 @@ def test_validate_miss_product_on_create_review(api_auth_client, product_factory
 
 
 @pytest.mark.django_db
-def test_validate_product_that_does_not_exist_on_create_review(api_auth_client, product_factory):
+def test_validate_product_that_does_not_exist_on_create_review(api_auth_client):
 
     # arrange
     payload = {
@@ -214,7 +214,7 @@ def test_validate_product_that_does_not_exist_on_create_review(api_auth_client, 
     url = reverse("product-reviews-list")
 
     # for auth user
-    resp = api_auth_client.post(url, payload)
+    resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
 
 
