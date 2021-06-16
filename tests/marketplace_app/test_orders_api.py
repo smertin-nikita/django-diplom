@@ -16,6 +16,7 @@ def test_retrieve_order_for_unauthorized_client(order_factory, api_client):
     # for UNAUTHORIZED client
     resp = api_client.get(url)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -27,6 +28,7 @@ def test_retrieve_order_for_not_owner_client(order_factory, api_auth_client):
     # for NOT OWNER client
     resp = api_auth_client.get(url)
     assert resp.status_code == HTTP_404_NOT_FOUND
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -73,6 +75,7 @@ def test_list_orders_for_unauthorized_client(api_client, order_factory, user_fac
     # for UNAUTHORIZED client
     resp = api_client.get(url)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -224,6 +227,7 @@ def test_create_order_for_unauthorized_client(api_client, product_ids_factory):
     # for UNAUTHORIZED client
     resp = api_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -273,6 +277,7 @@ def test_validate_empty_positions_on_create_order(api_auth_client, product_ids_f
     url = reverse("orders-list")
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -282,6 +287,7 @@ def test_validate_miss_product_id_in_positions_on_create_order(api_auth_client, 
     url = reverse("orders-list")
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -297,6 +303,7 @@ def test_validate_not_exists_product_in_positions_on_create_order(
     # for AUTH client
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -309,6 +316,7 @@ def test_validate_quantity_in_positions_on_create_order(api_auth_client, product
     # for AUTH client
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -322,6 +330,7 @@ def test_validate_amount_on_create_order(api_auth_client, product_ids_factory, p
     # for AUTH client
     resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
 
 
 @pytest.mark.parametrize(
@@ -382,6 +391,7 @@ def test_update_order_for_owner_client(api_client, product_ids_factory, order_fa
     url = reverse("orders-detail", kwargs={'pk': resp_json['id']})
     resp = api_client.patch(url, payload, format='json')
     assert resp.status_code == HTTP_403_FORBIDDEN
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -432,6 +442,7 @@ def test_delete_order_for_unauthorized_client(api_client, order_factory):
     url = reverse("orders-detail", kwargs={'pk': order.id})
     resp = api_client.delete(url)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -440,9 +451,10 @@ def test_delete_order_for_authorized_client(api_auth_client, order_factory):
     order = order_factory()
 
     # for not owner
-    url = reverse("orders-detail", kwargs={'pk': order})
+    url = reverse("orders-detail", kwargs={'pk': order.id})
     resp = api_auth_client.delete(url)
     assert resp.status_code == HTTP_403_FORBIDDEN
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
