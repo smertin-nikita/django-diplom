@@ -81,6 +81,6 @@ class CollectionViewSet(ModelViewSet):
     """ Viewset для подборок. """
 
     collection_product_set = CollectionProduct.objects.select_related('product')
-    queryset = Collection.objects.prefetch_related(Prefetch('collection_products', queryset=collection_product_set))
+    queryset = Collection.objects.prefetch_related(Prefetch('products', collection_product_set))
     permission_classes = [IsAuthenticatedOrReadOnly & IsAdminUserOrReadOnly]
     serializer_class = CollectionSerializer

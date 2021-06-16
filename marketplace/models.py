@@ -165,7 +165,7 @@ class Order(DateInfo):
 
 class CollectionProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='collection_products')
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='products')
 
     class Meta:
         db_table = "marketplace_collection_products"
@@ -190,9 +190,8 @@ class Collection(DateInfo):
         default=''
     )
 
-    products = models.ManyToManyField(
+    products_set = models.ManyToManyField(
         Product,
-        related_name='collections',
         through=CollectionProduct,
         blank=False,
         through_fields=["collection", "product"],
