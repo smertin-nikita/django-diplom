@@ -119,20 +119,22 @@ def test_create_product_for_unauthorized_client(api_client, product_factory):
     }
     # non auth user create
     url = reverse("products-list")
-    resp = api_client.post(url, payload)
+    resp = api_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
-def test_create_product_for_nonadmin_client(api_auth_client, product_factory):
+def test_create_product_for_non_admin_client(api_auth_client, product_factory):
     payload = {
         'title': 'test',
         'price': '500'
     }
     # auth user create
     url = reverse("products-list")
-    resp = api_auth_client.post(url, payload)
+    resp = api_auth_client.post(url, payload, format='json')
     assert resp.status_code == HTTP_403_FORBIDDEN
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -143,7 +145,7 @@ def test_create_product_for_admin_client(api_auth_admin, product_factory):
     }
     # admin create
     url = reverse("products-list")
-    resp = api_auth_admin.post(url, payload)
+    resp = api_auth_admin.post(url, payload, format='json')
     assert resp.status_code == HTTP_201_CREATED
     resp_json = resp.json()
     assert resp_json
@@ -161,8 +163,9 @@ def test_update_product_for_unauthorized_client(api_client, product_factory):
     # non auth user update
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
-    resp = api_client.patch(url, payload)
+    resp = api_client.patch(url, payload, format='json')
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -174,8 +177,9 @@ def test_update_product_for_nonadmin_client(api_auth_client, product_factory):
     # auth user update
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
-    resp = api_auth_client.patch(url, payload)
+    resp = api_auth_client.patch(url, payload, format='json')
     assert resp.status_code == HTTP_403_FORBIDDEN
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -188,7 +192,7 @@ def test_update_product_for_admin_client(api_auth_admin, product_factory):
     # admin update
     product = product_factory()
     url = reverse("products-detail", kwargs={'pk': product.id})
-    resp = api_auth_admin.patch(url, payload)
+    resp = api_auth_admin.patch(url, payload, format='json')
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
     assert resp_json
@@ -219,7 +223,7 @@ def test_validate_price_on_create_product(api_auth_admin, price, expected_status
     url = reverse("products-list")
 
     # act
-    resp = api_auth_admin.post(url, payload)
+    resp = api_auth_admin.post(url, payload, format='json')
 
     # assert
     assert resp.status_code == expected_status
@@ -234,6 +238,7 @@ def test_delete_product_for_unauthorized_client(api_client, product_factory):
     url = reverse("products-detail", kwargs={'pk': product.id})
     resp = api_client.delete(url)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
@@ -243,6 +248,7 @@ def test_delete_product_for_nonadmin_client(api_auth_client, product_factory):
     url = reverse("products-detail", kwargs={'pk': product.id})
     resp = api_auth_client.delete(url)
     assert resp.status_code == HTTP_403_FORBIDDEN
+    print(resp.rendered_content)
 
 
 @pytest.mark.django_db
