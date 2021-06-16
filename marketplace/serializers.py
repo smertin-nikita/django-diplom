@@ -214,7 +214,12 @@ class CollectionSerializer(serializers.ModelSerializer):
         """Метод для создания"""
 
         instance_products = CollectionProduct.objects.filter(collection=instance)
-        data_products = {item['product_id'].id: item['product_id'] for item in validated_data.pop('products')}
+        data_products = {}
+        for item in validated_data.pop('products'):
+            product = item.get('product_id', False)
+            if not product:
+                raise serializers.ValidationError({"products": [{"product_id": ["This field is required."]}]})
+            data_products[product.id] = product
 
         # Perform creations
         for product_id, product in data_products.items():

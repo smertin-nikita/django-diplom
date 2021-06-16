@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, \
-    HTTP_201_CREATED
+    HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 
 @pytest.mark.django_db
@@ -161,25 +161,128 @@ def test_create_collection_for_admin_client(api_auth_admin, product_ids_factory)
 def test_update_collection_for_unauthorized_client(api_client, collection_factory):
     # arrange
     collection = collection_factory()
-    url = reverse("product-collections-list")
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
 
     # for non auth user
-    resp = api_client.patch(url, kwargs={'pk': collection.id})
+    resp = api_client.patch(url)
     assert resp.status_code == HTTP_401_UNAUTHORIZED
     print(resp.rendered_content)
 
 
 @pytest.mark.django_db
-def test_create_collection_for_nonadmin_client(api_auth_client, collection_factory):
+def test_update_collection_for_nonadmin_client(api_auth_client, collection_factory):
     # arrange
     collection = collection_factory()
-    url = reverse("product-collections-list")
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
 
     # for non admin user
-    resp = api_auth_client.patch(url, kwargs={'pk': collection.id})
+    resp = api_auth_client.patch(url)
     assert resp.status_code == HTTP_403_FORBIDDEN
     print(resp.rendered_content)
 
 
+@pytest.mark.django_db
+def test_validate_empty_products_on_update_collection(api_auth_admin, collection_factory):
+    # arrange
+    collection = collection_factory()
+    payload = {
+        'products': []
+    }
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+
+    # for admin user
+    resp = api_auth_admin.patch(url, payload, format='json')
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
+
+
+@pytest.mark.django_db
+def test_validate_miss_product_id_products_on_update_collection(api_auth_admin, collection_factory):
+    # arrange
+    collection = collection_factory()
+    payload = {
+        'products': [{}]
+    }
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+
+    # for admin user
+    resp = api_auth_admin.patch(url, payload, format='json')
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
+
+
+@pytest.mark.django_db
+def test_validate_product_that_does_not_exist_on_update_collection(api_auth_admin, collection_factory):
+
+    # arrange
+    collection = collection_factory()
+    payload = {
+        'products': [{'product_id': 22}]  # product's id that does not exist
+    }
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+
+    # for auth user
+    resp = api_auth_admin.patch(url, payload, format='json')
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+    print(resp.rendered_content)
+
+
+@pytest.mark.django_db
+def test_update_collection_for_admin_client(api_auth_admin, collection_factory, product_ids_factory):
+
+    # arrange
+    collection = collection_factory()
+    payload = {
+        'title': 'test',
+        'text': 'test text',
+        'products':  product_ids_factory(_quantity=10)
+    }
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+
+    # for auth user
+    resp = api_auth_admin.patch(url, payload, format='json')
+    assert resp.status_code == HTTP_200_OK
+    resp_json = resp.json()
+    assert len(resp_json) == 6  # fields count
+    assert resp_json['id'] == collection.id
+    assert resp_json['title'] == payload['title']
+    assert resp_json['text'] == payload['text']
+    for i, item in enumerate(resp_json['products']):
+        assert item['product']['id'] == payload['products'][i]['product_id']
+
+
+@pytest.mark.django_db
+def test_delete_collection_for_admin_client(api_client, collection_factory):
+    # arrange
+    collection = collection_factory()
+
+    # for unauthorized
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+    resp = api_client.delete(url)
+    assert resp.status_code == HTTP_401_UNAUTHORIZED
+    print(resp.rendered_content)
+
+
+@pytest.mark.django_db
+def test_delete_collection_for_non_admin_client(api_auth_client, collection_factory):
+    # arrange
+    collection = collection_factory()
+
+    # for non-admin
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+    resp = api_auth_client.delete(url)
+    assert resp.status_code == HTTP_403_FORBIDDEN
+    print(resp.rendered_content)
+
+
+@pytest.mark.django_db
+def test_delete_collection_for_admin_client(api_auth_admin, collection_factory):
+    # arrange
+    collection = collection_factory()
+
+    # for admin
+    url = reverse("product-collections-detail", kwargs={'pk': collection.id})
+    resp = api_auth_admin.delete(url)
+    assert resp.status_code == HTTP_204_NO_CONTENT
 
 
