@@ -113,6 +113,11 @@ pip install -r requirements-dev.txt
 manage.py migrate
 ```
 
+Для заполнения БД тестовыми данными выполните команду:
+```base
+manage.py loaddata fixtures.json
+```
+
 Выполнить команду для тестирования API:
 
 ```bash
