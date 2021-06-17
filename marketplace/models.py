@@ -107,6 +107,9 @@ class Review(DateInfo):
         blank=False
     )
 
+    def __str__(self):
+        return f'{self.creator}: {self.product} - {self.mark}'
+
 
 class OrderProduct(models.Model):
     """ Позиции. Промежуточная таблица между товаром и заказом """
