@@ -61,7 +61,7 @@ class OrderViewSet(ModelViewSet):
         filter_params = {}
 
         # фильтрация для продукта из позиции
-        product_id = self.request.query_params.get('product_id')
+        product_id = self.request.query_params.get('product')
         if product_id is not None:
             filter_params = {'positions__product__id': product_id}
 

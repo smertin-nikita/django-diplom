@@ -24,13 +24,6 @@ class ReviewFilter(filters.FilterSet):
         fields = ['creator', 'product', 'created_at']
 
 
-class OrderProductSearchFilter(SearchFilter):
-    def get_search_fields(self, view, request):
-        if request.query_params.get('product_id'):
-            return ['=order_positions__product__id']
-        return super().get_search_fields(view, request)
-
-
 class OrderFilter(filters.FilterSet):
     """Фильтры для товаров."""
 
