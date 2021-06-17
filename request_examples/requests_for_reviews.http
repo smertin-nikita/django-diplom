@@ -1,0 +1,141 @@
+# примеры API-запросов для отзывов к товарам
+
+
+# Получение отзывов
+GET /api/v1/product-reviews/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Получение отзыва
+GET /api/v1/product-reviews/1 HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Фильтрация по создателю
+GET /api/v1/product-reviews/?creator=3 HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Фильтрация по продукту
+GET /api/v1/product-reviews/?product=9 HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Фильтрация по дата/время создания
+GET /api/v1/product-reviews/?created_at_after=2021-06-17T05:27:45 HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Фильтрация по дата/время создания
+GET /api/v1/product-reviews/?created_at_before=2021-06-17T05:27:45 HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Попытка создания отзыва не авторизованным клиентом
+POST /api/v1/product-reviews/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 39
+
+{
+    "mark":2,
+    "product_id":3
+}
+
+
+# Создание отзыва авторизованным клиентом
+POST /api/v1/product-reviews/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 39
+
+{
+    "mark":2,
+    "product_id":3
+}
+
+
+# Если предыдущий запрос был выполнен
+# Попытка создания второго отзыва к одному товару авторизованным клиентом
+POST /api/v1/product-reviews/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 39
+
+{
+    "mark":2,
+    "product_id":3
+}
+
+
+# Попытка обновления не авторизованным клиентом
+PATCH /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 39
+
+{
+    "mark":2,
+    "product_id":3
+}
+
+
+# Попытка обновления не автором отзыва
+PATCH /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token ca2cddf9a3a3e6b3b480ec68d04fe3c305ab7213
+Content-Type: application/json
+Content-Length: 39
+
+{
+    "mark":2,
+    "product_id":3
+}
+
+
+# Обновление отзыва автором
+PATCH /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 18
+
+{
+    "mark":5
+}
+
+
+# Попытка удаления не авторизованным пользователем
+DELETE /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 18
+
+
+# Попытка удаления не автором отзыва
+DELETE /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token ca2cddf9a3a3e6b3b480ec68d04fe3c305ab7213
+Content-Type: application/json
+
+
+# Удаление автором
+DELETE /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+
+
+# Удаление админом, если предыдущие не выполнялось
+DELETE /api/v1/product-reviews/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token afd8514736f68bf48d99b11f8383ff345cc32c59
+Content-Type: application/json
