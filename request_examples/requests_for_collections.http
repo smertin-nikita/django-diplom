@@ -1,0 +1,135 @@
+# примеры API-запросов для подборок
+
+
+# Получение подборок
+GET /api/v1/product-collections/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Получение подборки id = 1
+GET /api/v1/product-collections/1/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Создание подборки админом
+POST /api/v1/product-collections/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token afd8514736f68bf48d99b11f8383ff345cc32c59
+Content-Type: application/json
+Content-Length: 145
+
+{
+    "title":"Кроссовки Asics",
+    "products":[
+        {"product_id":4},
+        {"product_id":7},
+        {"product_id":9}
+        ]
+}
+
+
+# Попытка создания подборки неавторизованным клиентом
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 145
+
+{
+    "title":"Кроссовки Asics",
+    "products":[
+        {"product_id":4},
+        {"product_id":7},
+        {"product_id":9}
+        ]
+}
+
+
+# Попытка создать подборку не админом
+POST /api/v1/product-collections/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token ca2cddf9a3a3e6b3b480ec68d04fe3c305ab7213
+Content-Type: application/json
+Content-Length: 145
+
+{
+    "title":"Кроссовки Asics",
+    "products":[
+        {"product_id":4},
+        {"product_id":7},
+        {"product_id":9}
+        ]
+}
+
+
+# Попытка обновить подборку неавторизованным пользователем
+PATCH /api/v1/product-collections/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 177
+
+{
+    "title":"Кроссовки Спортивные",
+    "products":[
+        {"product_id":5},
+        {"product_id":6},
+        {"product_id":7},
+        {"product_id":8}
+        ]
+}
+
+
+# Попытка обновить подборку не админом
+PATCH /api/v1/product-collections/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 177
+
+{
+    "title":"Кроссовки Спортивные",
+    "products":[
+        {"product_id":5},
+        {"product_id":6},
+        {"product_id":7},
+        {"product_id":8}
+        ]
+}
+
+
+# Обновление подборки админом
+PATCH /api/v1/product-collections/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token afd8514736f68bf48d99b11f8383ff345cc32c59
+Content-Type: application/json
+Content-Length: 177
+
+{
+    "title":"Кроссовки Спортивные",
+    "products":[
+        {"product_id":5},
+        {"product_id":6},
+        {"product_id":7},
+        {"product_id":8}
+        ]
+}
+
+
+# Попытка удаления подборки неавторизованным клиентом
+DELETE /api/v1/product-collections/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Попытка удаления подборки не админом
+DELETE /api/v1/product-collections/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+
+
+# Удаление подборки админом
+DELETE /api/v1/product-collections/4/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
