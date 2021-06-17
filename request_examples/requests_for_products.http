@@ -1,0 +1,127 @@
+# примеры API-запросов
+
+
+# получение товаров
+GET /api/v1/products/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# получение товара с id = 1
+GET /api/v1/products/1/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# фильтрация по цене
+GET /api/v1/products/?price__lte=6000&price__gte=3000 HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# фильтрация по поиску
+GET /api/v1/products/?search=Jamis HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Попытка создания товара не авторизованным пользователем
+POST /api/v1/products/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Попытка создания товара не админом
+POST /api/v1/products/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+
+
+# Создание товара админом
+POST /api/v1/products/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token afd8514736f68bf48d99b11f8383ff345cc32c59
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3050
+}
+
+
+# Попытка обновления товара неавторизованным пользователем
+PATCH /api/v1/products/10/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3020
+}
+
+
+# Попытка обновления товара не админом
+PATCH /api/v1/products/10/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3020
+}
+
+
+# Обновление товара админом
+PATCH /api/v1/products/10/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token afd8514736f68bf48d99b11f8383ff345cc32c59
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3020
+}
+
+
+# Попытка удаления товара не авторизованным пользователем
+DELETE /api/v1/products/10/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3020
+}
+
+
+# Попытка удаления товара не админом
+DELETE /api/v1/products/10/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3020
+}
+
+
+# Удаление товара админом
+DELETE /api/v1/products/10/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token afd8514736f68bf48d99b11f8383ff345cc32c59
+Content-Type: application/json
+Content-Length: 62
+
+{
+    "title": "Кеды DC KALIS VULC SE",
+    "price": 3020
+}
