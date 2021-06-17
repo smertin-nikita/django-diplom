@@ -1,0 +1,199 @@
+# примеры API-запросов для заказов
+
+
+# Попытка получить заказы неавторизованным клиентом
+GET /api/v1/orders/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Получение заказов админом
+GET /api/v1/orders/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Получение собственных заказов клиентом
+GET /api/v1/orders/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+
+
+# Получение заказа id = 2 админом
+GET /api/v1/orders/2/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Получение заказа id = 2 собственником заказа
+GET /api/v1/orders/2/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+
+
+# Получение заказа не собственником
+GET /api/v1/orders/2/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token ca2cddf9a3a3e6b3b480ec68d04fe3c305ab7213
+Content-Type: application/json
+
+
+# Фильтрация по статусу status = DONE
+GET /api/v1/orders/?status=DONE HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Фильтрация по общей сумме заказа
+GET /api/v1/orders/?ordering=amount HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Фильтрация по дате создания
+GET /api/v1/orders/?created_at_after=2021-06-17T09:00:14 HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Фильтрация по дате обновления
+GET /api/v1/orders/?updated_at_before=2021-06-17T09:07:16 HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Фильтрация по продукту из заказа
+GET /api/v1/orders/?product=3 HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
+
+# Попытка создания заказа неавторизованным клиентом
+POST /api/v1/orders/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Создание заказа авторизованным клиентом
+POST /api/v1/orders/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 151
+
+{
+   "positions":[{
+       "product_id": 4,
+       "quantity": 4
+   },
+   {
+       "product_id": 7
+   },
+   {
+       "product_id": 8
+   }]
+}
+
+
+# Попытка обновления заказа неавторизованным пользователем
+PATCH /api/v1/orders/1/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+Content-Length: 151
+
+{
+   "positions":[{
+       "product_id": 3,
+       "quantity": 4
+   },
+   {
+       "product_id": 7
+   },
+   {
+       "product_id": 8
+   }]
+}
+
+
+# Попытка обновления заказа авторизованным клиентом
+PATCH /api/v1/orders/1/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+Content-Length: 151
+
+{
+   "positions":[{
+       "product_id": 3,
+       "quantity": 4
+   },
+   {
+       "product_id": 7
+   },
+   {
+       "product_id": 8
+   }]
+}
+
+
+# Обновление статуса заказа админом
+PATCH /api/v1/orders/2/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+Content-Length: 26
+
+{
+    "status": "DONE"
+}
+
+
+# Попытка админом обновить другие поля заказа, возвращает неизменный заказ
+PATCH /api/v1/orders/2/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+Content-Length: 161
+
+{
+    "positions":[{
+        "product_id": 3,
+        "quantity": 4
+    },
+    {
+        "product_id": 7
+    },
+    {
+        "product_id": 8
+    }]
+}
+
+
+# Попытка удаления заказа неавторизованным пользователем
+DELETE /api/v1/orders/6/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+
+# Попытка удаления заказа не админом
+DELETE /api/v1/orders/6/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token fb4d7157d8766164bd4cb360040984ce63472474
+Content-Type: application/json
+
+
+# Удаление заказа админом
+DELETE /api/v1/orders/6/ HTTP/1.1
+Host: 127.0.0.1:8000
+Authorization: Token dc077e2367c7f426668d2d67f7669e9ef7b29674
+Content-Type: application/json
+
