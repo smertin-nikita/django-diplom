@@ -57,7 +57,7 @@ class Product(DateInfo):
     # )
 
     def __str__(self):
-        return self.title
+        return f"{self.id} : {self.title}"
 
 
 class Review(DateInfo):
