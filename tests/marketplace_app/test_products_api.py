@@ -18,7 +18,6 @@ def test_retrieve_product(api_client, product_factory):
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     assert len(resp_json) == 6  # fields count
     assert resp_json['id'] == product.id
     assert resp_json['title'] == product.title
@@ -40,7 +39,6 @@ def test_list_products(api_client, product_factory):
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     assert len(resp_json) == len(products)
     for i, item in enumerate(resp_json):
         assert item['id'] == products[i].id
@@ -62,7 +60,6 @@ def test_filter_price_products(api_client, product_factory):
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     for item in resp_json:
         assert decimal.Decimal(item['price']) >= test_price
 
@@ -72,7 +69,6 @@ def test_filter_price_products(api_client, product_factory):
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     for item in resp_json:
         assert decimal.Decimal(item['price']) <= test_price
 
@@ -91,7 +87,6 @@ def test_filter_search_products(api_client, product_factory):
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     assert len(resp_json) == 1
     test_product = resp_json[0]
     assert test_product['id'] == product.id
@@ -103,7 +98,6 @@ def test_filter_search_products(api_client, product_factory):
     # assert
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     assert len(resp_json) == 1
     test_product = resp_json[0]
     assert test_product['id'] == product.id
@@ -148,7 +142,6 @@ def test_create_product_for_admin_client(api_auth_admin, product_factory):
     resp = api_auth_admin.post(url, payload, format='json')
     assert resp.status_code == HTTP_201_CREATED
     resp_json = resp.json()
-    assert resp_json
     assert len(resp_json) == 6  # fields count
     assert resp_json['title'] == payload['title']
     assert decimal.Decimal(resp_json['price']) == decimal.Decimal(payload['price'])
@@ -195,7 +188,6 @@ def test_update_product_for_admin_client(api_auth_admin, product_factory):
     resp = api_auth_admin.patch(url, payload, format='json')
     assert resp.status_code == HTTP_200_OK
     resp_json = resp.json()
-    assert resp_json
     assert len(resp_json) == 6  # fields count
     assert resp_json['id'] == product.id
     assert resp_json['title'] == payload['title']
@@ -227,8 +219,6 @@ def test_validate_price_on_create_product(api_auth_admin, price, expected_status
 
     # assert
     assert resp.status_code == expected_status
-    resp_json = resp.json()
-    assert resp_json
 
 
 @pytest.mark.django_db
