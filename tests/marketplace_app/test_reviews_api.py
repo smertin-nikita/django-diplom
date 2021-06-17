@@ -128,7 +128,7 @@ def test_create_reviews_for_unauthorized_client(api_client, product_factory):
 
 
 @pytest.mark.django_db
-def test_create_reviews_for_unauthorized_client(api_auth_client, product_factory):
+def test_create_reviews_for_authorized_client(api_auth_client, product_factory):
     product = product_factory()
     # arrange
     payload = {
