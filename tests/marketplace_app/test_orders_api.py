@@ -206,7 +206,7 @@ def test_filter_product_id_orders(api_auth_admin, order_factory, product_ids_fac
     test_order = resp.json()
     test_product_id = test_order['positions'][0]['product']['id']
     # act
-    resp = api_auth_admin.get(url, {'product_id': test_product_id})
+    resp = api_auth_admin.get(url, {'product': test_product_id})
 
     # assert
     assert resp.status_code == HTTP_200_OK
