@@ -37,7 +37,7 @@ Host: 127.0.0.1:8000
 Content-Type: application/json
 
 
-# Попытка создания отзыва не авторизованным клиентом
+# Попытка создания отзыва неавторизованным клиентом
 POST /api/v1/product-reviews/ HTTP/1.1
 Host: 127.0.0.1:8000
 Content-Type: application/json
@@ -76,7 +76,7 @@ Content-Length: 39
 }
 
 
-# Попытка обновления не авторизованным клиентом
+# Попытка обновления неавторизованным клиентом
 PATCH /api/v1/product-reviews/4/ HTTP/1.1
 Host: 127.0.0.1:8000
 Content-Type: application/json
@@ -113,7 +113,7 @@ Content-Length: 18
 }
 
 
-# Попытка удаления не авторизованным пользователем
+# Попытка удаления неавторизованным пользователем
 DELETE /api/v1/product-reviews/4/ HTTP/1.1
 Host: 127.0.0.1:8000
 Content-Type: application/json

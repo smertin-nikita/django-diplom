@@ -25,7 +25,7 @@ Host: 127.0.0.1:8000
 Content-Type: application/json
 
 
-# Попытка создания товара не авторизованным пользователем
+# Попытка создания товара неавторизованным пользователем
 POST /api/v1/products/ HTTP/1.1
 Host: 127.0.0.1:8000
 Content-Type: application/json
@@ -89,7 +89,7 @@ Content-Length: 62
 }
 
 
-# Попытка удаления товара не авторизованным пользователем
+# Попытка удаления товара неавторизованным пользователем
 DELETE /api/v1/products/10/ HTTP/1.1
 Host: 127.0.0.1:8000
 Content-Type: application/json
