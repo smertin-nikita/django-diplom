@@ -105,8 +105,6 @@ url: `/api/v1/product-collections/`
 pip install -r requirements-dev.txt
 ```
 
-Задать в настройках проекта SECRET_KEY.
-
 Необходимо создать базу в postgres, добавить в настройки проекта и прогнать миграции:
 
 ```base
