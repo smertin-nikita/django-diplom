@@ -105,7 +105,17 @@ url: `/api/v1/product-collections/`
 pip install -r requirements-dev.txt
 ```
 
-Необходимо создать базу в postgres, добавить в настройки проекта и прогнать миграции:
+Необходимо создать базу в postgres, и добавить переменные виртуального окружения с настройками для базы данных:
+
+
+```base
+'NAME_DB'
+'USER_DB'
+'PASSWORD_DB'
+```
+
+
+Прогнать миграции:
 
 ```base
 manage.py migrate
