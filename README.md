@@ -97,33 +97,35 @@ url: `/api/v1/product-collections/`
 
 ## Документация по проекту
 
-Для запуска проекта необходимо:
+Добавить виртуальные переменные локально в .env.dev
+```
+DEBUG
+SECRET_KEY
+DJANGO_ALLOWED_HOSTS
+SQL_ENGINE
+NAME_DB
+USER_DB
+PASSWORD_DB
+HOST
+PORT
+DATABASE
+```
 
-Установить зависимости:
+Создать образы и запустить контейнеры
 
 ```bash
-pip install -r requirements-dev.txt
+docker-compose up -d --build
 ```
-
-Необходимо создать базу в postgres, и добавить переменные виртуального окружения с настройками для базы данных:
-
-
-```base
-'NAME_DB'
-'USER_DB'
-'PASSWORD_DB'
-```
-
 
 Прогнать миграции:
 
-```base
-manage.py migrate
+```bash
+docker-compose exec web python manage.py migrate --noinput
 ```
 
 Для заполнения БД тестовыми данными выполните команду:
-```base
-manage.py loaddata fixtures.json
+```bash
+docker-compose exec web python manage.py loaddata fixtures.json
 ```
 
 Выполнить команду для тестирования API:

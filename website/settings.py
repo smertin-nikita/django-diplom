@@ -89,14 +89,14 @@ WSGI_APPLICATION = 'website.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = DATABASES = {
+DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': os.getenv('SQL_ENGINE'),
         'NAME': os.getenv('NAME_DB'),
         'USER': os.getenv('USER_DB'),
         'PASSWORD': os.getenv('PASSWORD_DB'),
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'HOST': os.getenv("HOST", "localhost"),
+        'PORT': os.getenv('PORT', '5432'),
     }
 }
 
